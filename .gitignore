@@ -4,7 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 src/main/resources/Database_Files
-src/main/resources/db
+
 .env
 ### STS ###
 .apt_generated
