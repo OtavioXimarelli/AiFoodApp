@@ -1,6 +1,7 @@
 package com.example.aitestapp.service;
 
 
+import com.example.aitestapp.model.FoodItem;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TextGenService {
@@ -18,11 +20,13 @@ public class TextGenService {
     Dotenv dotenv = Dotenv.load();
     private final WebClient webClient;
     private final String apiKey = dotenv.get("MARITAL_KEY");
+    private FoodItem foodItem;
     private String aiModel = dotenv.get("MARI_MODEL");
 
     @Autowired
-    public TextGenService(WebClient webClient) {
+    public TextGenService(WebClient webClient, FoodItem foodItem) {
         this.webClient = webClient;
+        this.foodItem = foodItem;
     }
 
     public Mono<String> fetchResponseFromApi(Map<String, Object> requestBody) {
@@ -48,12 +52,21 @@ public class TextGenService {
                 });
     }
 
-    public Mono<String> generateRecipe() {
+    String food = foodItem.stream()
+            .map(item -> String.format("%s (%s) - Quantidade: %d, Validade: %s",
+            item.getName(),
+            item.getQuantity(),
+            item.getExpiration()))
+            .collect(Collectors.joining("\n"));
+
+    String prompt = "Baseado no meu banco de dados, sugira receitas com os seguintes ingredientes: " + food;
+
+    public Mono<String> generateRecipe(List<FoodItem>  foodItems) {
         Map<String, Object> requestBody = Map.of(
                 "model", aiModel,
                 "messages", List.of(
                         Map.of("role", "system", "content", "Você é um chefe de cozinha que sugere receitas."),
-                        Map.of("role", "user", "content", "Sugira receitas com os seguintes ingredientes, arroz, feijao, linguiça toscana, batata: ")
+                        Map.of("role", "user", "content", prompt)
                 ),
                 "temperature", 0.7
         );

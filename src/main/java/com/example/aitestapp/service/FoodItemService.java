@@ -14,10 +14,7 @@ import java.util.Optional;
 public class FoodItemService {
 
     private final FoodItemRepository foodItemRepository;
-    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
     public FoodItemService(FoodItemRepository foodItemRepository, ThreadPoolTaskExecutor threadPoolTaskExecutor) {this.foodItemRepository = foodItemRepository;
-        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
     }
 
 
