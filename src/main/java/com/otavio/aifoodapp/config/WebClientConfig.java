@@ -1,4 +1,4 @@
-package com.example.aitestapp.config;
+package com.otavio.aifoodapp.config;
 
 
 import io.github.cdimascio.dotenv.Dotenv;

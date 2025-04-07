@@ -1,9 +1,9 @@
-package com.example.aitestapp.controller;
+package com.otavio.aifoodapp.controller;
 
 
-import com.example.aitestapp.model.FoodItem;
-import com.example.aitestapp.service.FoodItemService;
-import com.example.aitestapp.service.TextGenService;
+import com.otavio.aifoodapp.model.FoodItem;
+import com.otavio.aifoodapp.service.FoodItemService;
+import com.otavio.aifoodapp.service.TextGenService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

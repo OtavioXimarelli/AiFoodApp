@@ -1,7 +1,6 @@
-package com.example.aitestapp.service;
+package com.otavio.aifoodapp.service;
 
-
-import com.example.aitestapp.model.FoodItem;
+import com.otavio.aifoodapp.model.FoodItem;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -20,13 +19,13 @@ public class TextGenService {
     Dotenv dotenv = Dotenv.load();
     private final WebClient webClient;
     private final String apiKey = dotenv.get("MARITAL_KEY");
-    private FoodItem foodItem;
-    private String aiModel = dotenv.get("MARI_MODEL");
+    private final List<FoodItem> foodItems;
+    private final String aiModel = dotenv.get("MARI_MODEL");
 
     @Autowired
-    public TextGenService(WebClient webClient, FoodItem foodItem) {
+    public TextGenService(WebClient webClient, List<FoodItem> foodItems) {
         this.webClient = webClient;
-        this.foodItem = foodItem;
+        this.foodItems = foodItems;
     }
 
     public Mono<String> fetchResponseFromApi(Map<String, Object> requestBody) {
@@ -52,16 +51,16 @@ public class TextGenService {
                 });
     }
 
-    String food = foodItem.stream()
-            .map(item -> String.format("%s (%s) - Quantidade: %d, Validade: %s",
-            item.getName(),
-            item.getQuantity(),
-            item.getExpiration()))
-            .collect(Collectors.joining("\n"));
+    public Mono<String> generateRecipe(List<FoodItem> foodItems) {
+        String food = foodItems.stream()
+                .map(item -> String.format("%s - Quantidade: %d, Validade: %s",
+                        item.getName(),
+                        item.getQuantity(),
+                        item.getExpiration()))
+                .collect(Collectors.joining("\n"));
 
-    String prompt = "Baseado no meu banco de dados, sugira receitas com os seguintes ingredientes: " + food;
+        String prompt = "Baseado no meu banco de dados, sugira receitas com os seguintes ingredientes: " + food;
 
-    public Mono<String> generateRecipe(List<FoodItem>  foodItems) {
         Map<String, Object> requestBody = Map.of(
                 "model", aiModel,
                 "messages", List.of(
@@ -71,7 +70,5 @@ public class TextGenService {
                 "temperature", 0.7
         );
         return fetchResponseFromApi(requestBody);
-    }}
-
-
-
+    }
+}

@@ -1,8 +1,8 @@
-package com.example.aitestapp.controller;
+package com.otavio.aifoodapp.controller;
 
 
-import com.example.aitestapp.model.FoodItem;
-import com.example.aitestapp.service.FoodItemService;
+import com.otavio.aifoodapp.model.FoodItem;
+import com.otavio.aifoodapp.service.FoodItemService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

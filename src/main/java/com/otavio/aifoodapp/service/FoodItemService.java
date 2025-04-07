@@ -1,7 +1,7 @@
-package com.example.aitestapp.service;
+package com.otavio.aifoodapp.service;
 
-import com.example.aitestapp.model.FoodItem;
-import com.example.aitestapp.repository.FoodItemRepository;
+import com.otavio.aifoodapp.model.FoodItem;
+import com.otavio.aifoodapp.repository.FoodItemRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;

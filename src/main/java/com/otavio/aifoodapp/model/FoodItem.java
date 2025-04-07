@@ -1,4 +1,4 @@
-package com.example.aitestapp.model;
+package com.otavio.aifoodapp.model;
 
 
 import jakarta.persistence.*;

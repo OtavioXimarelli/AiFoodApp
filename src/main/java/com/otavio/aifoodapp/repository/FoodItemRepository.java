@@ -1,6 +1,6 @@
-package com.example.aitestapp.repository;
+package com.otavio.aifoodapp.repository;
 
-import com.example.aitestapp.model.FoodItem;
+import com.otavio.aifoodapp.model.FoodItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
