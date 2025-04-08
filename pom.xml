@@ -13,13 +13,14 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>AiFoodAPP</name>
     <description>Aplicativo de comida utilizando IA</description>
-    
+
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <spring-ai.version>1.0.0-M6</spring-ai.version>
     </properties>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -29,18 +30,29 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-core -->
+
+        <!-- Spring AI Dependencies -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-core</artifactId>
-            <version>1.0.0-M6</version>
+            <version>${spring-ai.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-openai -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai</artifactId>
-            <version>1.0.0-M6</version>
+            <version>${spring-ai.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-spring-boot-autoconfigure</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
@@ -62,31 +74,26 @@
             <artifactId>postgresql</artifactId>
             <version>42.7.5</version>
         </dependency>
-        
+
         <!-- Lombok para anotações @Data, @AllArgsConstructor, etc -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.36</version>
         </dependency>
-<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-docker-compose &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-docker-compose</artifactId>-->
-<!--            <version>3.1.1</version>-->
-<!--        </dependency>-->
+
         <!-- Spring WebFlux para WebClient -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
-        
+
         <!-- Reactor Core para tipos reativos (Mono, Flux) -->
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>
-        
+
         <!-- Dotenv para variáveis de ambiente -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
