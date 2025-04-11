@@ -103,8 +103,6 @@ public class MaritacaChatClient implements ChatClient {
     }
 
     private Map<String, Object> createRequestBody(Prompt prompt) {
-        // Usamos reflection para acessar o método que contém as mensagens
-        // Este é um fallback para lidar com diferenças de API
         List<Map<String, String>> messages;
         try {
             // Tentamos primeiro com getMessages()
