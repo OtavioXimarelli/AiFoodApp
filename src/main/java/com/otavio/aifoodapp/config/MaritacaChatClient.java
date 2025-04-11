@@ -1,17 +1,22 @@
 package com.otavio.aifoodapp.config;
 
 import org.springframework.ai.chat.client.ChatClient;
+
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.model.Generation;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,18 +24,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
+@Service
 public class MaritacaChatClient implements ChatClient {
 
-    private final WebClient webClient;
-    private final String apiUrl;
-    private final String apiKey;
-    private final String model;
 
-    public MaritacaChatClient(WebClient webClient, String apiUrl, String apiKey, String model) {
-        this.webClient = webClient;
-        this.apiUrl = apiUrl;
-        this.apiKey = apiKey;
-        this.model = model;
+    private final WebClient webClient;
+
+    @Value("${maritaca.api.url}")
+    private String apiUrl;
+
+    @Value("${maritaca.api.key}")
+    private String apiKey;
+
+    @Value("${maritaca.api.model}")
+    private String model;
+
+    public MaritacaChatClient(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.build();
     }
 
     @Override
@@ -54,29 +65,30 @@ public class MaritacaChatClient implements ChatClient {
                 for (Map<String, Object> choice : choices) {
                     Map<String, Object> message = (Map<String, Object>) choice.get("message");
                     String content = (String) message.get("content");
-                    generations.add(new Generation(content));
+                    AssistantMessage assistantMessage = new AssistantMessage(content);
+                    generations.add(new Generation(assistantMessage));
                 }
             }
-
             return new ChatResponse(generations);
         } catch (Exception e) {
             System.err.println("Erro ao chamar a API Maritaca: " + e.getMessage());
             e.printStackTrace();
-            List<Generation> errorGenerations = List.of(
-                    new Generation("Erro ao processar a solicitação. Por favor, tente novamente mais tarde.")
+            // Corrigido: Criando um AssistantMessage para a mensagem de erro
+            AssistantMessage errorMessage = new AssistantMessage(
+                    "Erro ao processar a solicitação. Por favor, tente novamente mais tarde."
             );
+            List<Generation> errorGenerations = List.of(new Generation(errorMessage));
             return new ChatResponse(errorGenerations);
         }
     }
 
     @Override
     public Flux<ChatResponse> stream(Prompt prompt) {
-        // Implementação simples para streaming, retornando o resultado como um único item no fluxo
         return Flux.just(call(prompt));
     }
 
     private Map<String, Object> createRequestBody(Prompt prompt) {
-        List<Map<String, String>> messages = prompt.getMessages().stream()
+        List<Map<String, Object>> messages = prompt.getMessages().stream()
                 .map(this::convertMessage)
                 .collect(Collectors.toList());
 
@@ -98,8 +110,7 @@ public class MaritacaChatClient implements ChatClient {
         } else if (message instanceof AssistantMessage) {
             result.put("role", "assistant");
         } else {
-            // Default fallback
-            result.put("role", "user");
+            result.put("role", "unknown");
         }
 
         result.put("content", message.getContent());
