@@ -1,8 +1,6 @@
 package com.otavio.aifoodapp.config;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.ChatClient.ChatClientRequestSpec;
-import org.springframework.ai.chat.client.ChatClient.Builder;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -41,31 +39,10 @@ public class MaritacaChatClient implements ChatClient {
         this.webClient = webClientBuilder.build();
     }
 
-    @Override
-    public ChatClientRequestSpec prompt() {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
-
-    @Override
-    public ChatClientRequestSpec prompt(String prompt) {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
-
-    @Override
-    public ChatClientRequestSpec prompt(Prompt prompt) {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
-
-    @Override
-    public Builder mutate() {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
-
-    @Override
+    // Removed @Override since call(Prompt) is not part of ChatClient
     public ChatResponse call(Prompt prompt) {
         Map<String, Object> requestBody = createRequestBody(prompt);
         try {
-            // Realiza a chamada à API com o WebClient
             Map response = webClient.post()
                     .uri(apiUrl)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -87,52 +64,25 @@ public class MaritacaChatClient implements ChatClient {
             }
             return new ChatResponse(generations);
         } catch (Exception e) {
-            System.err.println("Erro ao chamar a API Maritaca: " + e.getMessage());
+            System.err.println("Error calling the Maritaca API: " + e.getMessage());
             e.printStackTrace();
             AssistantMessage errorMessage = new AssistantMessage(
-                    "Erro ao processar a solicitação. Por favor, tente novamente mais tarde."
+                    "Error processing the request. Please try again later."
             );
             List<Generation> errorGenerations = List.of(new Generation(errorMessage));
             return new ChatResponse(errorGenerations);
         }
     }
 
-    @Override
+    // Removed @Override since stream(Prompt) is not part of ChatClient
     public Flux<ChatResponse> stream(Prompt prompt) {
-        return Flux.just(call(prompt));
+        throw new UnsupportedOperationException("Streaming not implemented.");
     }
 
     private Map<String, Object> createRequestBody(Prompt prompt) {
-        List<Map<String, String>> messages;
-        try {
-            // Tentamos primeiro com getMessages()
-            List<Message> messageList = (List<Message>) prompt.getClass().getMethod("getMessages").invoke(prompt);
-            messages = messageList.stream()
-                    .map(this::convertMessage)
-                    .collect(Collectors.toList());
-        } catch (Exception e1) {
-            try {
-                // Tentamos com getContents()
-                Object contents = prompt.getClass().getMethod("getContents").invoke(prompt);
-                if (contents instanceof List) {
-                    messages = ((List<Message>) contents).stream()
-                            .map(this::convertMessage)
-                            .collect(Collectors.toList());
-                } else {
-                    // Assumimos que é um Stream ou outra estrutura iterável
-                    messages = new ArrayList<>();
-                    for (Message m : prompt.toIterable()) {
-                        messages.add(convertMessage(m));
-                    }
-                }
-            } catch (Exception e2) {
-                // Último recurso: obtemos diretamente os campos necessários
-                messages = new ArrayList<>();
-                for (Message m : prompt.toIterable()) {
-                    messages.add(convertMessage(m));
-                }
-            }
-        }
+        List<Map<String, String>> messages = prompt.getInstructions().stream()
+                .map(this::convertMessage)
+                .collect(Collectors.toList());
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", model);
@@ -154,23 +104,29 @@ public class MaritacaChatClient implements ChatClient {
         } else {
             result.put("role", "unknown");
         }
-
-        // Tentamos diferentes métodos para obter o conteúdo da mensagem
-        String content;
-        try {
-            // Tentamos com getContent()
-            content = (String) message.getClass().getMethod("getContent").invoke(message);
-        } catch (Exception e1) {
-            try {
-                // Tentamos com getText()
-                content = (String) message.getClass().getMethod("getText").invoke(message);
-            } catch (Exception e2) {
-                // Último recurso: toString()
-                content = message.toString();
-            }
-        }
-
+        // Changed getContent() to getText()
+        String content = message.getText();
         result.put("content", content);
         return result;
+    }
+
+    @Override
+    public ChatClientRequestSpec prompt() {
+        throw new UnsupportedOperationException("Method not implemented.");
+    }
+
+    @Override
+    public ChatClientRequestSpec prompt(String content) {
+        throw new UnsupportedOperationException("Method not implemented.");
+    }
+
+    @Override
+    public ChatClientRequestSpec prompt(Prompt prompt) {
+        throw new UnsupportedOperationException("Method not implemented.");
+    }
+
+    @Override
+    public Builder mutate() {
+        throw new UnsupportedOperationException("Method not implemented.");
     }
 }
