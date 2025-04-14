@@ -51,6 +51,6 @@ public class ChatService {
 
 
         ChatResponse response = maritacaChatClient.call(chatPrompt);
-        return response.getGenerations().get(0).getContent();
+        return response.getResult().getOutput().getText();
     }
 }
