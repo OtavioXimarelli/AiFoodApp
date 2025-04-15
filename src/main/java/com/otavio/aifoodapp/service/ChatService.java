@@ -34,14 +34,18 @@ public class ChatService {
                 .collect(Collectors.joining("\n"));
 
 
-        String prompt = "Baseado nos ingredientes do meu banco de dados, crie uma receita:\n" +
-                food + "\n" +
-                "A receita deve conter o nome do prato, o modo de preparo e o tempo de preparo.\n" +
-                "A receita deve ser em português.\n" +
-                "A receita deve ser prática e rápida.\n" +
-                "A receita deve ser saudável e saborosa.\n" +
-                "A receita deve ser para 2 pessoas.\n" +
-                "A receita deve ter as calorias e macro-nutrientes estimados.";
+        String prompt = "Gere uma receita seguindo estritamente os critérios abaixo.\n\n" +
+                "**Ingredientes Disponíveis:**\n" + // Markdown para negrito pode ou não ser interpretado, mas ajuda na clareza
+                food + "\n\n" +
+                "**Critérios da Receita:**\n" +
+                "1.  **Idioma:** Português\n" +
+                "2.  **Porções:** 1 pessoas\n" +
+                "3.  **Estilo:** Prática (passos simples), rápida (com foco fitness), saudável e saborosa.\n" + // Exemplo de tempo limite
+                "4.  **Output Obrigatório:**\n" + // Ajustado para melhor estrutura de lista
+                "    * Nome do Prato (ou o que ele contém)\n" +
+                "    * Tempo Total de Preparo Estimado\n" +
+                "    * Modo de Preparo Detalhado (passo a passo)\n" +
+                "    * Estimativa Nutricional (Calorias, Proteínas, Carboidratos, Gorduras)"; // Macros especificados
 
 
         Prompt chatPrompt = new Prompt(List.of(
