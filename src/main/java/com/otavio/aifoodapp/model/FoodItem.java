@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.util.List;
 
 import com.otavio.aifoodapp.enums.FoodGroup;
 @Entity
@@ -36,4 +37,9 @@ public class FoodItem {
     // Enum para representar o grupo alimentar
     private FoodGroup foodGroup;
 
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "tb_food_tems_tags", joinColumns = @JoinColumn(name = "food_item_id"))  
+    @Column(name = "tag")
+    private List<String> tags;
 }
