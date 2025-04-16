@@ -1,10 +1,10 @@
 package com.otavio.aifoodapp.enums;
 
-public enum FoodGroup { // Nome no singular
+public enum FoodGroup {
     FRUITS("Frutas"),
     VEGETABLES("Vegetais"),
     GRAINS("Grãos"),
-    PROTEINS("Proteínas"), // Constantes em ALL_CAPS
+    PROTEINS("Proteínas"),
     DAIRY("Laticínios"),
     FATS_OILS("Gorduras e Óleos"),
     BEVERAGES("Bebidas"),

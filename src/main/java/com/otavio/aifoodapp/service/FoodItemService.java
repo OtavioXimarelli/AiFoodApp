@@ -34,9 +34,9 @@ public class FoodItemService {
         Optional<FoodItem> itemExist = foodItemRepository.findById(foodItem.getId());
         if (itemExist.isPresent()){
             return foodItemRepository.save(foodItem);
-        }
-        return null;
+        } else throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item with id " + foodItem.getId() + " not found");
     }
+
 
     public void delete (Long id) {foodItemRepository.deleteById(id);}
 }
