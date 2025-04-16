@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,12 +58,14 @@ public class FoodItemController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Optional<?>> deleteFood (@PathVariable Long id) {
-        Optinal<FoodItem> foodItemDel = foodItemService.listById(id);
+    public ResponseEntity<?> deleteFood (@PathVariable Long id) {
+        Optional<FoodItem> foodItemDel = foodItemService.listById(id);
         if (foodItemDel.isPresent()) {
             foodItemService.delete(id);
-                return ResponseEntity.status(HttpResponse.ok()).body("The item was successfully deleted");
+                return ResponseEntity.status(HttpStatus.OK).body("The item was successfully deleted");
         }
-        return ResponseEntity.status(HtppStatus.NOT_FOUND).body("The item was not found, please try again and check yhe item ID");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+            "The item was not found, please try again and check yhe item ID"
+            );
     }
 }
