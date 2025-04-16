@@ -14,7 +14,7 @@ import java.util.Optional;
 public class FoodItemService {
 
     private final FoodItemRepository foodItemRepository;
-    public FoodItemService(FoodItemRepository foodItemRepository, ThreadPoolTaskExecutor threadPoolTaskExecutor) {this.foodItemRepository = foodItemRepository;
+    public FoodItemService(FoodItemRepository foodItemRepository) {this.foodItemRepository = foodItemRepository;
     }
 
 
@@ -25,7 +25,7 @@ public class FoodItemService {
     public Optional<FoodItem> listById(Long id){
         Optional<FoodItem> idExists = foodItemRepository.findById(id);
         if (idExists.isPresent()) {
-            return foodItemRepository.findById(id);
+            return idExists;
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item with id " + id + " not found");
         }
