@@ -14,6 +14,15 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import org.slf4j.Logger; 
+import org.slf4j.LoggerFactory; 
+
+
+import org.springframework.web.reactive.function.client.WebClientResponseException; 
+
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +32,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class MaritacaChatClient implements ChatClient {
+
+    private static final Logger log = LoggerFactory.getLogger(MaritacaChatClient.class);
 
     private final WebClient webClient;
 
@@ -39,9 +50,12 @@ public class MaritacaChatClient implements ChatClient {
         this.webClient = webClientBuilder.build();
     }
 
-    // Removed @Override since call(Prompt) is not part of ChatClient
-    public ChatResponse call(Prompt prompt) {
+   
+    public Mono<ChatResponse> call(Prompt prompt) {
         Map<String, Object> requestBody = createRequestBody(prompt);
+
+        log.debug("Enviando requisição para Maritaca API: {}", requestBody);
+
         try {
             Map response = webClient.post()
                     .uri(apiUrl)
@@ -50,7 +64,6 @@ public class MaritacaChatClient implements ChatClient {
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(Map.class)
-                    .block();
 
             List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
             List<Generation> generations = new ArrayList<>();
