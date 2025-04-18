@@ -24,7 +24,7 @@ public class RecipeController {
     }
 
     @GetMapping("/gen")
-    public Mono<ResponseEntity<String>> generateRecipe() {
+    public Mono<ResponseEntity<Mono<String>>> generateRecipe() {
         List<FoodItem> foodItem = foodItemService.listAll();
        return  Mono.justOrEmpty(chatService.generateRecipe(foodItem))
                .map(ResponseEntity::ok)
