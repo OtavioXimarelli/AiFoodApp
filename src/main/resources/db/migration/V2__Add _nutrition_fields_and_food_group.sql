@@ -13,7 +13,7 @@ ALTER TABLE tb_food_item
 
 
 CREATE TABLE tb_food_items_tag (
-    food_item_id BIGINT NOT NULL,
-    tag VARCHAR(50) NOT NULL,
-    FOREIGN KEY (food_item_id) REFERENCES tb_food_item(id) ON DELETE CASCADE,
+                                   food_item_id BIGINT NOT NULL,
+                                   tag VARCHAR(50) NOT NULL,
+                                   FOREIGN KEY (food_item_id) REFERENCES tb_food_item(id) ON DELETE CASCADE
 )
