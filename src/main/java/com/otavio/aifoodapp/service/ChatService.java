@@ -10,6 +10,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +27,7 @@ public class ChatService {
         this.maritacaChatClient = maritacaChatClient;
     }
 
-    public String generateRecipe(List<FoodItem> foodItems) {
+    public Mono<String> generateRecipe(List<FoodItem> foodItems) {
         String food = foodItems.stream()
                 .map(item -> String.format("%s- Quantidade: %d, Validade: %s",
                         item.getName(), item.getQuantity(),
@@ -35,17 +36,17 @@ public class ChatService {
 
 
         String prompt = "Gere uma receita seguindo estritamente os critérios abaixo.\n\n" +
-                "**Ingredientes Disponíveis:**\n" + // Markdown para negrito pode ou não ser interpretado, mas ajuda na clareza
+                "**Ingredientes Disponíveis:**\n" +
                 food + "\n\n" +
                 "**Critérios da Receita:**\n" +
                 "1.  **Idioma:** Português\n" +
                 "2.  **Porções:** 1 pessoas\n" +
-                "3.  **Estilo:** Prática (passos simples), rápida (com foco fitness), saudável e saborosa.\n" + // Exemplo de tempo limite
-                "4.  **Output Obrigatório:**\n" + // Ajustado para melhor estrutura de lista
+                "3.  **Estilo:** Prática (passos simples), rápida (com foco fitness), saudável e saborosa.\n" +
+                "4.  **Output Obrigatório:**\n" +
                 "    * Nome do Prato (ou o que ele contém)\n" +
                 "    * Tempo Total de Preparo Estimado\n" +
                 "    * Modo de Preparo Detalhado (passo a passo)\n" +
-                "    * Estimativa Nutricional (Calorias, Proteínas, Carboidratos, Gorduras)"; // Macros especificados
+                "    * Estimativa Nutricional (Calorias, Proteínas, Carboidratos, Gorduras)";
 
 
         Prompt chatPrompt = new Prompt(List.of(
@@ -53,8 +54,8 @@ public class ChatService {
                 new UserMessage(prompt)
         ));
 
-
-        ChatResponse response = maritacaChatClient.call(chatPrompt);
-        return response.getResult().getOutput().getText();
+        return maritacaChatClient.call(chatPrompt)
+                .map(response -> response.getResult().getOutput().getText());
     }
+
 }
