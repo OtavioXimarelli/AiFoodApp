@@ -34,6 +34,8 @@ public class ChatService {
                         item.getExpiration()))
                 .collect(Collectors.joining("\n"));
 
+        //Prompt de teste
+//        String prompt = "Me mostre qual a estrutura do nosso banco de dados e quais itens estao armazenados nele";
 
         String prompt = "Gere uma receita seguindo estritamente os critérios abaixo.\n\n" +
                 "**Ingredientes Disponíveis:**\n" +
