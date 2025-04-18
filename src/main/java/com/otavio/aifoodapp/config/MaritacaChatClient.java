@@ -1,5 +1,6 @@
 package com.otavio.aifoodapp.config;
 
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -13,16 +14,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.slf4j.Logger; 
-import org.slf4j.LoggerFactory; 
-
-
-import org.springframework.web.reactive.function.client.WebClientResponseException; 
-
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,44 +47,82 @@ public class MaritacaChatClient implements ChatClient {
         this.webClient = webClientBuilder.build();
     }
 
-   
     public Mono<ChatResponse> call(Prompt prompt) {
         Map<String, Object> requestBody = createRequestBody(prompt);
 
         log.debug("Enviando requisição para Maritaca API: {}", requestBody);
 
-        try {
-            Map response = webClient.post()
-                    .uri(apiUrl)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(Map.class)
+        return webClient.post()
+                .uri(apiUrl)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                .bodyValue(requestBody)
+                .retrieve()
+                // Tratamento mais granular de erros HTTP
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    log.error("Erro da API Maritaca. Status: {}, Body: {}", clientResponse.statusCode(), errorBody);
+                                    return Mono.error(new WebClientResponseException(
+                                            "API Error: " + clientResponse.statusCode() + " Body: " + errorBody,
+                                            clientResponse.statusCode().value(),
+                                            errorBody,
+                                            clientResponse.headers().asHttpHeaders(),
+                                            null, null
+                                    ));
+                                })
+                )
+                .bodyToMono(Map.class) // Obtém a resposta como Mono<Map>
+                .map(responseMap -> { // Usar .map() para transformar a resposta bem-sucedida
+                    log.debug("Resposta recebida da Maritaca API: {}", responseMap);
+                    // ** Adicionei uma verificação defensiva para 'choices' **
+                    Object choicesObj = responseMap.get("choices");
+                    List<Generation> generations = new ArrayList<>();
 
-            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-            List<Generation> generations = new ArrayList<>();
+                    if (choicesObj instanceof List) {
+                        @SuppressWarnings("unchecked") // Seguro devido à verificação instanceof
+                        List<Map<String, Object>> choices = (List<Map<String, Object>>) choicesObj;
 
-            if (choices != null && !choices.isEmpty()) {
-                for (Map<String, Object> choice : choices) {
-                    Map<String, Object> message = (Map<String, Object>) choice.get("message");
-                    String content = (String) message.get("content");
-                    generations.add(new Generation(new AssistantMessage(content)));
-                }
-            }
-            return new ChatResponse(generations);
-        } catch (Exception e) {
-            System.err.println("Error calling the Maritaca API: " + e.getMessage());
-            e.printStackTrace();
-            AssistantMessage errorMessage = new AssistantMessage(
-                    "Error processing the request. Please try again later."
-            );
-            List<Generation> errorGenerations = List.of(new Generation(errorMessage));
-            return new ChatResponse(errorGenerations);
-        }
+                        if (!choices.isEmpty()) {
+                            for (Map<String, Object> choice : choices) {
+                                Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                                if (message != null) {
+                                    String content = (String) message.get("content");
+                                    if (content != null) {
+                                        // ** Usei a classe Generation importada **
+                                        generations.add(new Generation(new AssistantMessage(content)));
+                                    } else {
+                                        log.warn("Campo 'content' nulo na mensagem da API: {}", message);
+                                    }
+                                } else {
+                                    log.warn("Campo 'message' nulo na escolha da API: {}", choice);
+                                }
+                            }
+                        } else {
+                            log.warn("Lista 'choices' vazia na resposta da API: {}", responseMap);
+                        }
+                    } else {
+                        log.warn("Campo 'choices' não é uma lista ou está nulo na resposta da API: {}", responseMap);
+                    }
+
+                    return new ChatResponse(generations); // Retorna o ChatResponse transformado
+                })
+                .onErrorResume(e -> { // Usar .onErrorResume() para tratar erros
+                    log.error("Falha ao chamar a API Maritaca ou processar a resposta: {}", e.getMessage(), e);
+
+                    AssistantMessage errorMessage = new AssistantMessage(
+                            "Desculpe, ocorreu um erro ao processar sua solicitação. Tente novamente mais tarde."
+                    );
+
+                    List<Generation> errorGenerations = List.of(new Generation(errorMessage));
+
+
+                    // Retorna um Mono contendo o ChatResponse de erro
+                    return Mono.just(new ChatResponse(errorGenerations));
+                });
     }
 
-    // Removed @Override since stream(Prompt) is not part of ChatClient
+
     public Flux<ChatResponse> stream(Prompt prompt) {
         throw new UnsupportedOperationException("Streaming not implemented.");
     }
@@ -107,34 +142,37 @@ public class MaritacaChatClient implements ChatClient {
 
     private Map<String, String> convertMessage(Message message) {
         Map<String, String> result = new HashMap<>();
+        String role = "unknown";
 
         if (message instanceof SystemMessage) {
-            result.put("role", "system");
+            role = "system";
         } else if (message instanceof UserMessage) {
-            result.put("role", "user");
+            role = "user";
         } else if (message instanceof AssistantMessage) {
-            result.put("role", "assistant");
-        } else {
-            result.put("role", "unknown");
+            role = "assistant";
         }
-        // Changed getContent() to getText()
+        result.put("role", role);
+
+        // Verifica se o conteúdo da mensagem não é nulo antes de adicioná-lo ao mapa
         String content = message.getText();
-        result.put("content", content);
+        result.put("content", content != null ? content : "");
+
         return result;
     }
 
+
     @Override
-    public ChatClientRequestSpec prompt() {
+    public ChatClient.ChatClientRequestSpec prompt() {
         throw new UnsupportedOperationException("Method not implemented.");
     }
 
     @Override
-    public ChatClientRequestSpec prompt(String content) {
+    public ChatClient.ChatClientRequestSpec prompt(String content) {
         throw new UnsupportedOperationException("Method not implemented.");
     }
 
     @Override
-    public ChatClientRequestSpec prompt(Prompt prompt) {
+    public ChatClient.ChatClientRequestSpec prompt(Prompt prompt) {
         throw new UnsupportedOperationException("Method not implemented.");
     }
 
@@ -142,4 +180,6 @@ public class MaritacaChatClient implements ChatClient {
     public Builder mutate() {
         throw new UnsupportedOperationException("Method not implemented.");
     }
+
+
 }
