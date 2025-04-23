@@ -3,7 +3,9 @@ import java.util.List;
 
 import com.otavio.aifoodapp.dto.FoodDto;
 import com.otavio.aifoodapp.model.FoodItem;
-import com.otavio.aifoodapp.enums.FoodGroup;;
+import com.otavio.aifoodapp.enums.FoodGroup;
+import org.springframework.stereotype.Component;;
+@Component
 
 public class FoodMapper {
     public FoodItem map(FoodDto foodDto) {
