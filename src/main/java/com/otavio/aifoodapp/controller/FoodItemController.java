@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,18 +27,18 @@ public class FoodItemController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<FoodDto> create(@RequestBody FoodDto foodDto) {
+    public ResponseEntity<FoodDto> create(@Valid @RequestBody FoodDto foodDto) {
         FoodItem foodItem = foodMapper.map(foodDto);
         FoodItem savedFood = foodItemService.save(foodItem);
-
-        return ResponseEntity.ok(foodMapper.map(savedFood));
+        return ResponseEntity.status(HttpStatus.CREATED).body(foodMapper.map(savedFood));
     }
 
     @GetMapping("/list/{id}")
-    public ResponseEntity<Optional<FoodDto>> listById(@PathVariable Long id) {
-        FoodItem foodItem = foodItemService.listById(id).orElse(null);
-        assert foodItem != null;
-        return ResponseEntity.ok(Optional.ofNullable(foodMapper.map(foodItem)));
+    public ResponseEntity<FoodDto> listById(@PathVariable Long id) {
+        return foodItemService.listById(id)
+                .map(foodMapper::map)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @GetMapping("/list")
@@ -68,13 +69,10 @@ public class FoodItemController {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteFood(@PathVariable Long id) {
-        Optional<FoodItem> foodItemDel = foodItemService.listById(id);
-        if (foodItemDel.isPresent()) {
+        if (foodItemService.listById(id).isPresent()) {
             foodItemService.delete(id);
-            return ResponseEntity.ok(foodMapper.map(foodItemDel.get()));
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                "The item was not found, please try again and check yhe item ID"
-        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Item not found");
     }
 }
