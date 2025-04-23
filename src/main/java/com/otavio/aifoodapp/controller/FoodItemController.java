@@ -1,6 +1,8 @@
 package com.otavio.aifoodapp.controller;
 
 
+import com.otavio.aifoodapp.dto.FoodDto;
+import com.otavio.aifoodapp.mapper.FoodMapper;
 import com.otavio.aifoodapp.model.FoodItem;
 import com.otavio.aifoodapp.service.FoodItemService;
 
@@ -12,60 +14,67 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/food")
+@RequestMapping("/api/foods")
 public class FoodItemController {
     private final FoodItemService foodItemService;
+    private final FoodMapper foodMapper;
 
 
-    public FoodItemController(FoodItemService foodItemService) {
+    public FoodItemController(FoodItemService foodItemService, FoodMapper foodMapper) {
         this.foodItemService = foodItemService;
+        this.foodMapper = foodMapper;
     }
 
     @PostMapping("/create")
-    public ResponseEntity<FoodItem> create(@RequestBody FoodItem foodItem) {
+    public ResponseEntity<FoodDto> create(@RequestBody FoodDto foodDto) {
+        FoodItem foodItem = foodMapper.map(foodDto);
+        FoodItem savedFood = foodItemService.save(foodItem);
 
-        FoodItem saved = foodItemService.save(foodItem);
-
-
-        return ResponseEntity.status(200).body(saved);
+        return ResponseEntity.ok(foodMapper.map(savedFood));
     }
 
     @GetMapping("/list/{id}")
-    public ResponseEntity<Optional<FoodItem>> listById(@PathVariable Long id) {
-        Optional<FoodItem> listId = foodItemService.listById(id);
-            return ResponseEntity.status(200).body(listId);
+    public ResponseEntity<Optional<FoodDto>> listById(@PathVariable Long id) {
+        FoodItem foodItem = foodItemService.listById(id).orElse(null);
+        assert foodItem != null;
+        return ResponseEntity.ok(Optional.ofNullable(foodMapper.map(foodItem)));
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<FoodItem>> list() {
+    public ResponseEntity<List<FoodDto>> list() {
+        List<FoodItem> foodItems = foodItemService.listAll();
+        List<FoodDto> foodDtos = foodItems.stream()
+                .map(foodMapper::map)
+                .toList();
+        return ResponseEntity.ok(foodDtos);
 
-        List<FoodItem> allItems = foodItemService.listAll();
-        return ResponseEntity.status(HttpStatus.OK).body(allItems);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> update(@RequestBody FoodItem foodItem) {
-        FoodItem foodItemUpdated = foodItemService.modify(foodItem);
-        if (foodItemUpdated != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    foodItemUpdated + "The item was successfully updated"
-            );
-        }
+    public ResponseEntity<?> update(@RequestBody FoodDto foodDto) {
 
+        FoodItem foodItem = foodMapper.map(foodDto);
+        Optional<FoodItem> foodItemOpt = foodItemService.listById(foodItem.getId());
+        if (foodItemOpt.isPresent()) {
+            FoodItem updatedFood = foodItemService.modify(foodItem);
+            return ResponseEntity.ok(foodMapper.map(updatedFood));
+        }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                "The item was not found, please try again, make sure the ID is correct"
+                "The item was not found, please try again and check the item ID"
         );
+
+
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteFood (@PathVariable Long id) {
+    public ResponseEntity<?> deleteFood(@PathVariable Long id) {
         Optional<FoodItem> foodItemDel = foodItemService.listById(id);
         if (foodItemDel.isPresent()) {
             foodItemService.delete(id);
-                return ResponseEntity.status(HttpStatus.OK).body("The item was successfully deleted");
+            return ResponseEntity.ok(foodMapper.map(foodItemDel.get()));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-            "The item was not found, please try again and check yhe item ID"
-            );
+                "The item was not found, please try again and check yhe item ID"
+        );
     }
 }
