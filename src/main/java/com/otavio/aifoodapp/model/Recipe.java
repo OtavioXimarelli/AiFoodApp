@@ -7,8 +7,9 @@ import java.util.Set;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
+@EqualsAndHashCode
 @Entity
 @Table(name = "tb_recipes")
 
@@ -42,4 +43,57 @@ public class Recipe {
 
 
 
+    public Recipe(String name, String description, List<String> instructions, List<String> nutritionalInfo) {
+        this.name = name;
+        this.description = description;
+        this.instructions = instructions;
+        this.nutritionalInfo = nutritionalInfo;
+    }
+
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    public List<String> getInstructions() {
+        return instructions;
+    }
+    public void setInstructions(List<String> instructions) {
+        this.instructions = instructions;
+    }
+    public List<String> getNutritionalInfo() {
+        return nutritionalInfo;
+    }
+    public void setNutritionalInfo(List<String> nutritionalInfo) {
+        this.nutritionalInfo = nutritionalInfo;
+    }
+    public Set<RecipeIngredient> getIngredientsList() {
+        return ingredientsList;
+    }
+    public void setIngredientsList(Set<RecipeIngredient> ingredientsList) {
+        this.ingredientsList = ingredientsList;
+    }
+
+    public void addIngredient(FoodItem foodItem, double quantity, String unit) {
+        RecipeIngredient recipeIngredient = new RecipeIngredient(this, foodItem, quantity, unit);
+        ingredientsList.add(recipeIngredient);
+    }
+
+
+    public void removeIngredient(RecipeIngredient recipeIngredient) {
+        this.ingredientsList.remove(recipeIngredient);
+    }
 }
