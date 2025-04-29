@@ -13,15 +13,21 @@ import java.util.Optional;
 public class FoodItemService {
 
     private final FoodItemRepository foodItemRepository;
-    public FoodItemService(FoodItemRepository foodItemRepository) {this.foodItemRepository = foodItemRepository;
+
+    public FoodItemService(FoodItemRepository foodItemRepository) {
+        this.foodItemRepository = foodItemRepository;
     }
 
 
-    public FoodItem save(FoodItem foodItem) { return foodItemRepository.save(foodItem);}
+    public FoodItem save(FoodItem foodItem) {
+        return foodItemRepository.save(foodItem);
+    }
 
-    public List<FoodItem> listAll (){return foodItemRepository.findAll();}
+    public List<FoodItem> listAll() {
+        return foodItemRepository.findAll();
+    }
 
-    public Optional<FoodItem> listById(Long id){
+    public Optional<FoodItem> listById(Long id) {
         Optional<FoodItem> idExists = foodItemRepository.findById(id);
         if (idExists.isPresent()) {
             return idExists;
@@ -32,11 +38,14 @@ public class FoodItemService {
 
     public FoodItem modify(FoodItem foodItem) {
         Optional<FoodItem> itemExist = foodItemRepository.findById(foodItem.getId());
-        if (itemExist.isPresent()){
+        if (itemExist.isPresent()) {
             return foodItemRepository.save(foodItem);
-        } else throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item with id " + foodItem.getId() + " not found");
+        } else
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item with id " + foodItem.getId() + " not found");
     }
 
 
-    public void delete (Long id) {foodItemRepository.deleteById(id);}
+    public void delete(Long id) {
+        foodItemRepository.deleteById(id);
+    }
 }
