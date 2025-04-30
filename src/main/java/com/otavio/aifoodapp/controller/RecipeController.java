@@ -28,9 +28,15 @@ public class RecipeController {
     @GetMapping("/gen")
     public Mono<ResponseEntity<Mono<String>>> generateRecipe() {
         List<FoodItem> foodItem = foodItemService.listAll();
-       return  Mono.justOrEmpty(chatService.generateRecipe(foodItem))
-               .map(ResponseEntity::ok)
-               .defaultIfEmpty(ResponseEntity.notFound().build());
+        return Mono.justOrEmpty(chatService.generateRecipe(foodItem))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
 
-        }
+    }
+
+    @GetMapping("/analyze")
+    public Mono<ResponseEntity<Mono<String>>> analyzeRecipe() {
+
+    }
+
 }
