@@ -36,18 +36,19 @@ public class ChatService {
         //Prompt de teste
 //        String prompt = "Me mostre qual a estrutura do nosso banco de dados e quais itens estao armazenados nele";
 
-        String prompt = "Gere uma receita seguindo estritamente os critérios abaixo.\n\n" +
-                "**Ingredientes Disponíveis:**\n" +
+        String prompt = "Generate a recipe strictly following the criteria below.\n\n" +
+                "**Available Ingredients:**\n" +
                 food + "\n\n" +
-                "**Critérios da Receita:**\n" +
-                "1.  **Idioma:** Português\n" +
-                "2.  **Porções:** 1 pessoas\n" +
-                "3.  **Estilo:** Prática (passos simples), rápida (com foco fitness), saudável e saborosa.\n" +
-                "4.  **Output Obrigatório:**\n" +
-                "    * Nome do Prato (ou o que ele contém)\n" +
-                "    * Tempo Total de Preparo Estimado\n" +
-                "    * Modo de Preparo Detalhado (passo a passo)\n" +
-                "    * Estimativa Nutricional (Calorias, Proteínas, Carboidratos, Gorduras)";
+                "**Recipe Criteria:**\n" +
+                "1.  **Language:** Portuguese\n" +
+                "2.  **Servings:** 1 person\n" +
+                "3.  **Style:** Practical (simple steps), quick (fitness-focused), healthy, and tasty.\n" +
+                "4.  **Mandatory Output:**\n" +
+                "    * Dish Name (or what it contains)\n" +
+                "    * Estimated Total Preparation Time\n" +
+                "    * Detailed Preparation Method (step by step)\n" +
+                "    * Nutritional Estimate (Calories, Proteins, Carbohydrates, Fats)\n\n" +
+                "**Note:** The answer must be in Portuguese.";
 
 
         Prompt chatPrompt = new Prompt(List.of(
@@ -55,8 +56,39 @@ public class ChatService {
                 new UserMessage(prompt)
         ));
 
-        return maritacaChatClient.call(chatPrompt)
+        return MaritacaChatClient.call(chatPrompt)
                 .map(response -> response.getResult().getOutput().getText());
     }
 
+
+    public Mono<String> analyzeNutritionalProfile(List<FoodItem> foodItems) {
+        String food = foodItems.stream()
+                .map(item -> String.format("%s- Quantidade: %d, Validade: %s",
+                        item.getName(), item.getQuantity(),
+                        item.getExpiration()))
+                .collect(Collectors.joining("\n"));
+
+        String nutriPrompt = "Analyze the nutritional profile of the following food items:\n\n" +
+                "**Food Items:**\n" +
+                food + "\n\n" +
+                "**Criteria:**\n" +
+                "1.  **Language:** Portuguese\n" +
+                "2.  **Output Required:**\n" +
+                "    * Nutritional Profile (Calories, Proteins, Carbohydrates, Fats)\n" +
+                "    * Suggestions for a balanced diet based on the provided food items.\n";
+
+
+        Prompt analyzePrompt = new Prompt(List.of(
+                new SystemMessage(systemPrompt),
+                new UserMessage(nutriPrompt)));
+
+        return MaritacaChatClient.call(analyzePrompt)
+                .map(response -> response.getResult().getOutput().getText());
+
+    }
+
+    public Mono<String> suggestDietaryAdjustments(List<FoodItem> foodItems, String dietaryPreference) {
+
+        return null;
+    }
 }
