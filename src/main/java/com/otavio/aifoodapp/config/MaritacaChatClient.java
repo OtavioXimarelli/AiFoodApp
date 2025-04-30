@@ -47,7 +47,7 @@ public class MaritacaChatClient implements ChatClient {
         this.webClient = webClientBuilder.build();
     }
 
-    public Mono<ChatResponse> call(Prompt prompt) {
+    public static Mono<ChatResponse> call(Prompt prompt) {
         Map<String, Object> requestBody = createRequestBody(prompt);
 
         log.debug("Enviando requisição para Maritaca API: {}", requestBody);
