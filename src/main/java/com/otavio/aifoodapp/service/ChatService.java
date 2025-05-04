@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,5 +86,40 @@ public class ChatService {
     public Mono<String> suggestDietaryAdjustments(List<FoodItem> foodItems, String dietaryPreference) {
 
         return null;
+    }
+
+    public Recipe parseRecipeFromText(String recipeText, List<FoodItem> foodItem) {
+        Recipe recipe = new Recipe();
+        List<String> instructions = new ArrayList<>();
+        List<String> nutritionalInfo = new ArrayList<>();
+        String currentSection = "";
+
+        String[] lines = recipeText.split("\\r?\\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (line.toLowerCase().startsWith("nome do prato:")) {
+                recipe.setName(line.substring("nome do prato:".length()).trim());
+            } else if (line.toLowerCase().startsWith("tempo de preparo:")) {
+                recipe.setDescription(line.substring("tempo de preparo:".length()).trim());
+            } else if (line.toLowerCase().startsWith("modo de preparo:")) {
+                currentSection = "instructions";
+            } else if (line.toLowerCase().startsWith("informação nutricional:")) {
+                currentSection = "nutritional";
+            } else if (!line.isEmpty()) {
+                switch (currentSection) {
+                    case "instructions":
+                        instructions.add(line);
+                        break;
+                    case "nutritional":
+                        nutritionalInfo.add(line);
+                        break;
+                }
+            }
+        }
+        recipe.setInstructions(instructions);
+        recipe.setNutritionalInfo(nutritionalInfo);
+        recipe.setQuantity(1);
+        recipe.setExpiration("");
+        return recipe;
     }
 }
