@@ -3,6 +3,7 @@ package com.otavio.aifoodapp.service;
 
 import com.otavio.aifoodapp.config.MaritacaChatClient;
 import com.otavio.aifoodapp.model.FoodItem;
+import com.otavio.aifoodapp.model.Recipe;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -56,35 +57,29 @@ public class ChatService {
                 new UserMessage(prompt)
         ));
 
-        return MaritacaChatClient.call(chatPrompt)
+        return maritacaChatClient.call(chatPrompt)
                 .map(response -> response.getResult().getOutput().getText());
     }
 
+    public Mono<String> analyzeNutritionalProfile(Recipe recipe) {
+        String food = String.format("%s- Quantidade: %d, Validade: %s",
+                recipe.getName(), recipe.getQuantity(), recipe.getExpiration());
 
-    public Mono<String> analyzeNutritionalProfile(List<FoodItem> foodItems) {
-        String food = foodItems.stream()
-                .map(item -> String.format("%s- Quantidade: %d, Validade: %s",
-                        item.getName(), item.getQuantity(),
-                        item.getExpiration()))
-                .collect(Collectors.joining("\n"));
-
-        String nutriPrompt = "Analyze the nutritional profile of the following food items:\n\n" +
-                "**Food Items:**\n" +
+        String nutriPrompt = "Analyze the nutritional profile of the following food item:\n\n" +
+                "**Food Item:**\n" +
                 food + "\n\n" +
                 "**Criteria:**\n" +
                 "1.  **Language:** Portuguese\n" +
                 "2.  **Output Required:**\n" +
                 "    * Nutritional Profile (Calories, Proteins, Carbohydrates, Fats)\n" +
-                "    * Suggestions for a balanced diet based on the provided food items.\n";
-
+                "    * Suggestions for a balanced diet based on the provided food item.\n";
 
         Prompt analyzePrompt = new Prompt(List.of(
                 new SystemMessage(systemPrompt),
                 new UserMessage(nutriPrompt)));
 
-        return MaritacaChatClient.call(analyzePrompt)
+        return maritacaChatClient.call(analyzePrompt)
                 .map(response -> response.getResult().getOutput().getText());
-
     }
 
     public Mono<String> suggestDietaryAdjustments(List<FoodItem> foodItems, String dietaryPreference) {
