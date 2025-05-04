@@ -1,0 +1,5 @@
+CREATE TABLE tb_recipes_nutritional_info (
+    recipe_id BIGINT NOT NULL ,
+    nutritional_info VARCHAR(255),
+    FOREIGN KEY (recipe_id) REFERENCES tb_recipes(id)
+);
