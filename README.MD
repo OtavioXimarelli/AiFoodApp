@@ -1,194 +1,175 @@
-# 🤖 AiFoodApp
+# AI Food App
 
-## 📝 Descrição
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-23-orange)](https://www.oracle.com/java/)
+[![Spring AI](https://img.shields.io/badge/Spring%20AI-0.8.0-blue)](https://spring.io/projects/spring-ai)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-blue)](https://www.postgresql.org/)
+[![Flyway](https://img.shields.io/badge/Flyway-Latest-red)](https://flywaydb.org/)
+[![Docker](https://img.shields.io/badge/Docker-Latest-2496ED)](https://www.docker.com/)
+[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-3.8-2496ED)](https://docs.docker.com/compose/)
 
-O AiFoodApp é uma aplicação Java Spring Boot que demonstra a integração de um back-end com múltiplas APIs de geração de texto, incluindo a API da Maritalk e OpenAI, para gerar receitas e outras informações. Além disso, a aplicação gerencia itens alimentares utilizando um banco de dados H2. O projeto segue o padrão de arquitetura MVC para melhor organização e escalabilidade.
+## 📝 Sobre o Projeto
 
-## ✨ Funcionalidades
-
-### 🌟 Gerenciamento de Itens Alimentares
-
-- Criação, listagem, atualização e exclusão de itens alimentares via API REST.
-- Persistência de dados em banco de dados H2.
-
-### 🌟 Geração de Receitas e Conteúdo
-
-- Integração com APIs externas (Maritalk e OpenAI) para gerar receitas e outros tipos de conteúdo baseados em texto.
-- Utilização de WebClient para comunicação com as APIs externas.
-- Utilização do mesmo padrão de requisição para ambas as APIs.
-
-### 🌟 Configuração de Ambiente Flexível
-
-- Gerenciamento de variáveis de ambiente com Dotenv, facilitando a troca de URLs, chaves de API e modelos.
-- Configuração centralizada do WebClient para chamadas às APIs externas.
-- Facilidade de troca de modelo e API devido ao uso do mesmo padrão de requisição.
+O AI Food App é uma aplicação que integra gerenciamento de alimentos com inteligência artificial para gerar receitas personalizadas e análises nutricionais. O sistema permite que os usuários cadastrem alimentos disponíveis e recebam sugestões de receitas otimizadas baseadas nos ingredientes que possuem.
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Java**: Linguagem de programação principal.
-- **Spring Boot**: Framework para desenvolvimento rápido de aplicações Java.
-- **Spring WebFlux**: Framework reativo para construção de aplicações web escaláveis.
-- **H2 Database**: Banco de dados em memória para desenvolvimento e testes.
-- **Flyway**: Gerenciamento de migrações de banco de dados.
-- **Lombok**: Geração automática de código boilerplate.
-- **Dotenv**: Gerenciamento de variáveis de ambiente.
-- **Maven**: Gerenciamento de dependências e build.
+- **Spring Boot**: Framework para criação da aplicação Java
+- **Spring Data JPA**: Para persistência e acesso a dados
+- **Spring AI**: Integração com APIs de inteligência artificial
+- **Maritaca AI**: API de IA para geração de receitas e análises nutricionais em português
+- **PostgreSQL**: Banco de dados relacional
+- **Flyway**: Controle de versão do banco de dados
+- **Lombok**: Redução de código boilerplate
+- **RESTful API**: Comunicação entre frontend e backend
+- **Docker**: Containerização da aplicação e banco de dados
+- **Docker Compose**: Orquestração de múltiplos containers
 
-## 📂 Persistência de Dados no H2
+## 🏗️ Arquitetura
 
-O projeto utiliza o banco de dados H2 para armazenar os dados e foi configurado para armazenamento persistente em arquivo. No entanto, por padrão, o H2 não persiste os dados entre reinicializações. Veja abaixo como configurar corretamente.
+O projeto segue uma arquitetura em camadas:
 
-### Como acessar o console do H2
+- **Controller**: Endpoints da API REST
+- **Service**: Lógica de negócios
+- **Repository**: Acesso a dados
+- **Model**: Entidades do domínio
+- **DTO**: Objetos de transferência de dados
+- **Mapper**: Conversão entre entidades e DTOs
+- **Config**: Configurações da aplicação
 
-1. **Inicie a aplicação**
-   ```
-   ./mvnw spring-boot:run
-   ```
+### Infraestrutura
 
-2. **Acesse o console web do H2**
-  - Abra um navegador e acesse: http://localhost:8080/h2-console
+O projeto está configurado para execução em containers Docker:
 
-3. **Configurar a conexão**
-  - Use as seguintes credenciais:
-    - **JDBC URL**: `jdbc:h2:mem:testdb`
-    - **User Name**: `sa`
-    - **Password**: (deixe em branco)
+- **Dockerfile**: Define a imagem da aplicação baseada no Eclipse Temurin (JDK 23)
+- **Docker Compose**: Orquestra a aplicação e o banco de dados PostgreSQL
+- **Ambiente de Desenvolvimento**: Configurações específicas para desenvolvimento local
+- **Ambiente de Produção**: Preparado para implantação em ambientes containerizados
 
-4. **Executar consultas**
-   ```sql
-   SELECT * FROM FOOD_ITEM;
-   ```
+## 🗃️ Estrutura do Banco de Dados
 
-### Tornando os dados persistentes
+- **tb_food_item**: Armazena informações sobre os alimentos disponíveis
+- **tb_food_items_tag**: Tags associadas aos alimentos
+- **tb_recipes**: Informações básicas sobre as receitas
+- **tb_recipe_instructions**: Passos para preparar as receitas
+- **tb_recipes_nutritional_info**: Informações nutricionais das receitas
+- **tb_recipe_ingredients**: Relacionamento entre receitas e ingredientes
 
-Para manter os dados após reinicialização, altere o arquivo `application.properties`:
+## 🚀 Funcionalidades
 
-```properties
-spring.datasource.url=jdbc:h2:file:./data/aitestapp
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
-spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-spring.h2.console.enabled=true
-```
+### Gerenciamento de Alimentos
+- Cadastro de novos alimentos com informações nutricionais
+- Listagem de todos os alimentos disponíveis
+- Atualização e exclusão de alimentos
 
-## 🗄️ Migrações de Banco de Dados com Flyway
+### Geração de Receitas com IA
+- Criação automática de receitas baseadas nos alimentos disponíveis
+- Receitas focadas em praticidade, rapidez e saúde
+- Instruções detalhadas passo a passo
+- Informações nutricionais estimadas
 
-O projeto utiliza Flyway para gerenciamento de migrações de banco de dados, garantindo que o esquema seja consistente em todos os ambientes.
+### Análise Nutricional
+- Análise do perfil nutricional das receitas
+- Sugestões para uma dieta equilibrada
 
-### Estrutura das Migrações
+## 🔌 API Endpoints
 
-As migrações estão localizadas em:
-```
-src/
-└── main/
-    └── resources/
-        └── db/
-            └── migration/
-                ├── V1__create_food_item_table.sql
-                ├── V2__add_nutrition_columns.sql
-                └── ...
-```
+### Food Items
+- `POST /api/foods/create`: Cria um novo alimento
+- `GET /api/foods/list`: Lista todos os alimentos
+- `GET /api/foods/list/{id}`: Busca um alimento pelo ID
+- `PUT /api/foods/update`: Atualiza um alimento existente
+- `DELETE /api/foods/delete/{id}`: Remove um alimento
 
-### Executando Migrações
+### Recipes
+- `GET /api/recipes/gen`: Gera uma nova receita com base nos alimentos disponíveis
+- `GET /api/recipes/analyze/{id}`: Analisa o perfil nutricional de uma receita
 
-As migrações são executadas automaticamente na inicialização da aplicação. Para executá-las manualmente:
+## 💻 Como Executar o Projeto
 
+### Execução Local
+
+1. Clone o repositório
 ```bash
-./mvnw flyway:migrate
+git clone https://github.com/seu-usuario/ai-food-app.git
+cd ai-food-app
 ```
 
-### Criando Novas Migrações
+2. Configure as variáveis de ambiente no arquivo `application.properties`
+```properties
+# Configurações do banco de dados
+spring.datasource.url=jdbc:postgresql://localhost:5432/aifoodapp
+spring.datasource.username=seu_usuario
+spring.datasource.password=sua_senha
 
-Para adicionar uma nova migração:
-
-1. Crie um novo arquivo SQL na pasta `src/main/resources/db/migration/`
-2. Nomeie o arquivo seguindo o padrão: `V{número}__{descrição}.sql`
-3. Escreva as instruções SQL necessárias
-4. Ao reiniciar a aplicação, o Flyway aplicará automaticamente as novas migrações
-
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/example/aitestapp/
-│   │       ├── AiTestAppApplication.java
-│   │       ├── controller/
-│   │       │   ├── FoodItemController.java
-│   │       │   └── RecipeController.java
-│   │       ├── service/
-│   │           ├── FoodItemService.java
-│   │           └── TextGenService.java
-│   └── resources/
-│       ├── application.properties
-│       └── db/
-│           └── migration/
-│               └── V1__create_food_item_table.sql
-└── test/
-    └── java/
-        └── com/example/aitestapp/
-            └── AiTestAppApplicationTests.java
+# Configurações da API Maritaca
+maritaca.api.url=https://api.maritaca.ai/api/chat/completions
+maritaca.api.key=sua_chave_api
+maritaca.api.model=sabia-2-medium
+maritaca.system.prompt=Você é um assistente de culinária especialista em nutrição e receitas saudáveis.
 ```
 
-## 💻 Instalação
+3. Execute o projeto
+```bash
+./mvnw spring-boot:run
+```
 
-### Pré-requisitos:
+### Execução com Docker
 
-- Java JDK 11 ou superior.
-- Maven.
-- Git.
+1. Clone o repositório
+```bash
+git clone https://github.com/seu-usuario/ai-food-app.git
+cd ai-food-app
+```
 
-### Configuração e Instalação:
+2. Construa a aplicação
+```bash
+./mvnw clean package
+```
 
-1. **Clone o repositório**:
-   ```bash
-   git clone https://github.com/OtavioXimarelli/AiAPP.git
-   cd AiTestApp
-   ```
+3. Execute com Docker Compose
+```bash
+docker-compose up -d
+```
 
-2. **Configure as variáveis de ambiente no arquivo `.env`**:
-   ```
-   MARITALK_URL=url_da_maritalk
-   MARITAL_KEY=sua_api_key_aqui
-   MARI_MODEL=seu_modelo_aqui
-   GPT_URL=url_da_openai
-   GPT_MODEL=seu_modelo_aqui
-   OPEN_AI_KEY=sua_open_ai_key_aqui
-   ```
+O Docker Compose irá:
+- Iniciar um container PostgreSQL com o banco de dados `foodDB`
+- Construir a imagem da aplicação usando o Dockerfile
+- Iniciar a aplicação conectada ao banco de dados
+- Expor a aplicação na porta 8080 do host
 
-3. **Execute a aplicação**:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+## 🧪 Status Atual do Projeto
 
-## 📚 Uso
+O projeto encontra-se em fase de desenvolvimento, com as seguintes funcionalidades implementadas:
 
-Acesse a aplicação em http://localhost:8080/.
+✅ Estrutura básica da aplicação  
+✅ Gerenciamento de alimentos (CRUD completo)  
+✅ Integração com a API Maritaca AI  
+✅ Geração de receitas baseada nos alimentos disponíveis  
+✅ Análise nutricional de receitas  
+✅ Containerização com Docker e Docker Compose
 
-Utilize os endpoints abaixo para gerenciar itens alimentares e gerar receitas.
+**Em desenvolvimento:**  
+🔄 Interface de usuário  
+🔄 Recomendações personalizadas baseadas em preferências alimentares  
+🔄 Sistema de favoritos e histórico de receitas  
+🔄 Otimização da integração com a IA para melhorar as recomendações
 
-### Endpoints da API
+## 📋 Próximos Passos
 
-#### Geração de Receitas
-
-- **Gerar Receita**
-  - GET `/gen` - Retorna uma receita gerada por API externa.
-
-  - **Atualmente o serviço de geração de receita com base nos itens salvos no banco de dado está em desenvolvimento :)**
-
-#### Gerenciamento de Itens Alimentares
-
-- **Criar item** (POST `/food/create`)
-- **Listar todos os itens** (GET `/food/list`)
-- **Listar item por ID** (GET `/food/list/{id}`)
-- **Atualizar item** (PUT `/food/update`)
+- Desenvolvimento de uma interface de usuário em React
+- Implementação de autenticação e autorização
+- Expansão das funcionalidades de análise nutricional
+- Adição de filtros para restrições alimentares (vegetariano, sem glúten, etc.)
+- Otimização da geração de receitas com base no histórico de preferências
+- Configuração de CI/CD para deploy automático usando Docker
+- Implementação de monitoramento e logging para os containers
+- Otimização das configurações Docker para ambientes de produção
 
 ## 👥 Contribuições
 
-Contribuições são bem-vindas! Abra um pull request ou relate problemas.
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e enviar pull requests.
 
-## ✉️ Licença
+## 📄 Licença
 
-Este projeto está licenciado sob a MIT License. 
+Este projeto está licenciado sob a [MIT License](LICENSE).
