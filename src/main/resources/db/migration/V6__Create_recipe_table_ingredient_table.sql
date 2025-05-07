@@ -1,8 +1,3 @@
-CREATE TABLE tb_recipes (
-                            id BIGSERIAL PRIMARY KEY,
-                            name VARCHAR(255) NOT NULL
-);
-
 CREATE TABLE tb_recipe_ingredients (
                                        id BIGSERIAL PRIMARY KEY,
                                        recipe_id BIGINT NOT NULL,
