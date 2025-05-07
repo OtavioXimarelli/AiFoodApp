@@ -19,8 +19,18 @@ public class FoodItemService {
     }
 
 
-    public FoodItem save(FoodItem foodItem) {
-        return foodItemRepository.save(foodItem);
+    /**
+     * Salva múltiplos itens de alimentos
+     * @param foodItems Lista de itens de alimentos a serem salvos
+     * @return Lista de itens de alimentos salvos
+     */
+
+    /**
+     * Provavelmente eu adicione um metodo para salvar apenas um, porém por agora este parece ser o melhor jeito de se fazer
+     * */
+
+    public List<FoodItem> saveAll(List<FoodItem> foodItems) {
+        return foodItemRepository.saveAll(foodItems);
     }
 
     public List<FoodItem> listAll() {
