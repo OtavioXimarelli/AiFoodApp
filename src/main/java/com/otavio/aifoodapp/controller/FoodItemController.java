@@ -6,6 +6,7 @@ import com.otavio.aifoodapp.mapper.FoodMapper;
 import com.otavio.aifoodapp.model.FoodItem;
 import com.otavio.aifoodapp.service.FoodItemService;
 
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/foods")
@@ -27,10 +29,18 @@ public class FoodItemController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<FoodDto> create(@Valid @RequestBody FoodDto foodDto) {
-        FoodItem foodItem = foodMapper.map(foodDto);
-        FoodItem savedFood = foodItemService.save(foodItem);
-        return ResponseEntity.status(HttpStatus.CREATED).body(foodMapper.map(savedFood));
+    public ResponseEntity<List<FoodDto>> create(@Valid @RequestBody List<FoodDto> foodDto) {
+        List<FoodItem> foodItems = foodDto.stream()
+                .map(foodMapper::map)
+                .collect(Collectors.toList());
+
+        List<FoodItem> savedItems = foodItemService.saveAll(foodItems);
+        List<FoodDto> savedDto = savedItems.stream()
+                .map(foodMapper::map)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedDto);
+
     }
 
     @GetMapping("/list/{id}")
