@@ -4,7 +4,7 @@ public enum FoodGroup {
     FRUITS("Frutas"),
     VEGETABLES("Vegetais"),
     GRAINS("Grãos"),
-    PROTEINS("Proteínas"),
+    PROTEIN("Proteínas"),
     DAIRY("Laticínios"),
     FATS_OILS("Gorduras e Óleos"),
     BEVERAGES("Bebidas"),
