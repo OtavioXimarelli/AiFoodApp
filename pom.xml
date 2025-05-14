@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>11.3.4</version>
+            <version>11.7.1</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -80,7 +80,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.36</version>
+            <version>1.18.38</version>
         </dependency>
 
        
