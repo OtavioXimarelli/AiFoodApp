@@ -7,6 +7,7 @@
 [![Flyway](https://img.shields.io/badge/Flyway-Latest-red)](https://flywaydb.org/)
 [![Docker](https://img.shields.io/badge/Docker-Latest-2496ED)](https://www.docker.com/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-3.8-2496ED)](https://docs.docker.com/compose/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/OtavioXimarelli/AiFoodApp)
 
 ## 📝 Sobre o Projeto
 
