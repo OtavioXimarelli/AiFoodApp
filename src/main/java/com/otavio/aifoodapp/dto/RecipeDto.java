@@ -21,6 +21,4 @@ public class RecipeDto {
     private List<String> instructions;
    private Set<RecipeIngredientDto> ingredientsList;
 
-
-
 }

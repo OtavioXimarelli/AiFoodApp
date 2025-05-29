@@ -6,7 +6,6 @@ import com.otavio.aifoodapp.mapper.FoodMapper;
 import com.otavio.aifoodapp.model.FoodItem;
 import com.otavio.aifoodapp.service.FoodItemService;
 
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
