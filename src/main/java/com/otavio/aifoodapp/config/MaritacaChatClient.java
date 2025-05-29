@@ -11,6 +11,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -82,8 +83,10 @@ public class MaritacaChatClient implements ChatClient {
 
                         if (!choices.isEmpty()) {
                             for (Map<String, Object> choice : choices) {
-                                Map<String, Object> message = (Map<String, Object>) choice.get("message");
-                                if (message != null) {
+                                Object messageObj = choice.get("message");
+                                if (messageObj instanceof Map) {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> message = (Map<String, Object>) messageObj;
                                     String content = (String) message.get("content");
                                     if (content != null) {
                                         generations.add(new Generation(new AssistantMessage(content)));
@@ -91,7 +94,7 @@ public class MaritacaChatClient implements ChatClient {
                                         log.warn("Campo 'content' nulo na mensagem da API: {}", message);
                                     }
                                 } else {
-                                    log.warn("Campo 'message' nulo na escolha da API: {}", choice);
+                                    log.warn("Campo 'message' nulo ou não é um Map na escolha da API: {}", choice);
                                 }
                             }
                         } else {
@@ -152,21 +155,25 @@ public class MaritacaChatClient implements ChatClient {
     }
 
     @Override
+    @NonNull
     public ChatClientRequestSpec prompt() {
         throw new UnsupportedOperationException("Method not implemented.");
     }
 
     @Override
-    public ChatClientRequestSpec prompt(String content) {
+    @NonNull
+    public ChatClientRequestSpec prompt(@NonNull String content) {
         throw new UnsupportedOperationException("Method not implemented.");
     }
 
     @Override
-    public ChatClientRequestSpec prompt(Prompt prompt) {
+    @NonNull
+    public ChatClientRequestSpec prompt( @NonNull Prompt prompt) {
         throw new UnsupportedOperationException("Method not implemented.");
     }
 
     @Override
+    @NonNull
     public Builder mutate() {
         throw new UnsupportedOperationException("Method not implemented.");
     }
