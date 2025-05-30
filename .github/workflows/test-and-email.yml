@@ -8,8 +8,18 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    outputs:
+      total: ${{ steps.test-summary.outputs.total }}
+      passed: ${{ steps.test-summary.outputs.passed }}
+      failed: ${{ steps.test-summary.outputs.failed }}
+      skipped: ${{ steps.test-summary.outputs.skipped }}
+      duration: ${{ steps.start-end.outputs.duration }}
 
     steps:
+    - name: Start time
+      id: start-end
+      run: echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
+
     - name: Checkout code
       uses: actions/checkout@v4
 
@@ -28,6 +38,7 @@ jobs:
           ${{ runner.os }}-maven-
 
     - name: Build and test with Maven
+      id: maven
       run: mvn clean test
 
     - name: Archive test results
@@ -37,7 +48,29 @@ jobs:
         name: test-results
         path: target/surefire-reports/
 
-    - name: Send email with test summary
+    - name: Summarize test results
+      id: test-summary
+      run: |
+        total=$(grep -h 'testsuite' target/surefire-reports/*.xml | awk -F'"' '{print $4}' | paste -sd+ - | bc)
+        failed=$(grep -h 'testsuite' target/surefire-reports/*.xml | awk -F'"' '{print $8}' | paste -sd+ - | bc)
+        skipped=$(grep -h 'testsuite' target/surefire-reports/*.xml | awk -F'"' '{print $12}' | paste -sd+ - | bc)
+        passed=$((total - failed - skipped))
+        echo "total=$total" >> $GITHUB_OUTPUT
+        echo "passed=$passed" >> $GITHUB_OUTPUT
+        echo "failed=$failed" >> $GITHUB_OUTPUT
+        echo "skipped=$skipped" >> $GITHUB_OUTPUT
+
+    - name: End time and duration
+      id: end-time
+      run: |
+        end_time=$(date +%s)
+        start_time=${{ steps.start-end.outputs.start_time }}
+        duration=$((end_time - start_time))
+        min=$((duration / 60))
+        sec=$((duration % 60))
+        echo "duration=${min}m ${sec}s" >> $GITHUB_OUTPUT
+
+    - name: Send beautiful email with test summary
       if: always()
       uses: dawidd6/action-send-mail@v3
       with:
@@ -50,13 +83,42 @@ jobs:
         from: ${{ secrets.MAIL_USERNAME }}
         content_type: text/html
         body: |
-          <h2>Test Results for ${{ github.repository }} (Run #${{ github.run_number }})</h2>
-          <p>Workflow: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run Logs</a></p>
-          <p>Status: <b>${{ job.status }}</b></p>
-          <p>Commit: ${{ github.sha }}</p>
-          <p>Branch: ${{ github.ref_name }}</p>
-          <p>Summary of test results:</p>
-          <pre>
-          ${{ steps.test.outputs }}
-          </pre>
+          <html>
+            <body style="font-family: Arial, sans-serif; background:#f5f5f5; padding:20px;">
+              <div style="max-width:600px; margin:auto; background:white; border-radius:8px; box-shadow:0 2px 8px #ccc; padding:24px;">
+                <h2 style="color:#336699;">🚀 Test Results for <span style="color:#222;">${{ github.repository }}</span> (Run #${{ github.run_number }})</h2>
+                <p>
+                  <strong>Workflow:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run Logs</a><br>
+                  <strong>Status:</strong> <span style="color:${{ job.status == 'success' && 'green' || 'red' }};"><b>${{ job.status == 'success' && '✅ Success' || '❌ Failure' }}</b></span><br>
+                  <strong>Commit:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a><br>
+                  <strong>Branch:</strong> <span style="color:#555;">${{ github.ref_name }}</span><br>
+                  <strong>Author:</strong> ${{ github.actor }}<br>
+                  <strong>Started:</strong> ${{ steps.start-end.outputs.start_time }}<br>
+                  <strong>Duration:</strong> ${{ steps.end-time.outputs.duration }}
+                </p>
+                <hr>
+                <h3 style="color:#336699;">Test Results</h3>
+                <table style="width:100%; border-collapse:collapse;">
+                  <thead>
+                    <tr style="background:#eef;">
+                      <th style="border:1px solid #ccc; padding:8px;">Total</th>
+                      <th style="border:1px solid #ccc; padding:8px;">Passed</th>
+                      <th style="border:1px solid #ccc; padding:8px;">Failed</th>
+                      <th style="border:1px solid #ccc; padding:8px;">Skipped</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="border:1px solid #ccc; padding:8px;">${{ steps.test-summary.outputs.total }}</td>
+                      <td style="border:1px solid #ccc; padding:8px; color:green;">${{ steps.test-summary.outputs.passed }}</td>
+                      <td style="border:1px solid #ccc; padding:8px; color:${{ steps.test-summary.outputs.failed == '0' && 'green' || 'red' }};">${{ steps.test-summary.outputs.failed }}</td>
+                      <td style="border:1px solid #ccc; padding:8px; color:#555;">${{ steps.test-summary.outputs.skipped }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <hr>
+                <p style="color:#777;">You are receiving this email because you requested notifications for workflow runs on <b>${{ github.repository }}</b>.</p>
+              </div>
+            </body>
+          </html>
         attachments: target/surefire-reports/*.xml
