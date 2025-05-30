@@ -121,6 +121,7 @@ jobs:
                 <p style="margin:8px 0;"><strong>Workflow:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color:#0066cc;">View Run Logs</a></p>
                 <p style="margin:8px 0;"><strong>Status:</strong> <span style="color:${{ steps.set-status.outputs.status_color }}; font-weight:bold;">${{ steps.set-status.outputs.status }}</span></p>
                 <p style="margin:8px 0;"><strong>Commit:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}" style="color:#0066cc;">${{ github.sha }}</a></p>
+                <p style="margin:8px 0;"><strong>Message:</strong> <em style="color:#666;">"${{ github.event.head_commit.message }}"</em></p>
                 <p style="margin:8px 0;"><strong>Branch:</strong> <span style="color:#555;">${{ github.ref_name }}</span></p>
                 <p style="margin:8px 0;"><strong>Author:</strong> ${{ github.actor }}</p>
                 <p style="margin:8px 0;"><strong>Started:</strong> ${{ steps.start-time.outputs.start_time_formatted }}</p>
