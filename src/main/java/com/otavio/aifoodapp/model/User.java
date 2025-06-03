@@ -21,7 +21,7 @@ public class User implements UserDetails {
 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -33,6 +33,12 @@ public class User implements UserDetails {
     private String lastName;
     private String email;
     private UserRoles role;
+
+    public User(String login, String password,UserRoles role) {
+        this.login = login;
+        this.password = password;
+        this.role = role;
+    }
 
     @Override
     public String getUsername() {
