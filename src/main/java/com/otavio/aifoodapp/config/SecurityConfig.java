@@ -24,8 +24,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .cors() // Habilita CORS
-                .and()
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
@@ -44,27 +42,4 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {return new BCryptPasswordEncoder();}
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        // Opção 1: Se você precisa de allowCredentials = true, especifique origens concretas
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",
-            "http://192.168.5.17:3000"
-        ));
-
-        // Opção 2: Se você prefere permitir qualquer origem, desabilite credentials
-        // configuration.setAllowedOriginPatterns(List.of("*"));
-        // configuration.setAllowCredentials(false);
-
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(false); // mudando para false para resolver o problema
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
 }
