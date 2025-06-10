@@ -11,11 +11,13 @@
                 <relativePath/> <!-- lookup parent from repository -->
             </parent>
 
+
             <groupId>com.otavio</groupId>
             <artifactId>AiFoodAPP</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <name>AiFoodAPP</name>
             <description>Aplicativo de comida utilizando IA</description>
+
 
             <properties>
                 <java.version>21</java.version>
@@ -116,6 +118,7 @@
                 </dependency>
             </dependencies>
 
+
             <build>
                 <plugins>
                     <plugin>
@@ -138,3 +141,4 @@
                 </plugins>
             </build>
         </project>
+

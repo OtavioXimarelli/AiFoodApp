@@ -1,0 +1,160 @@
+name: Test Spring Application and Send Email
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      total: ${{ steps.test-summary.outputs.total }}
+      passed: ${{ steps.test-summary.outputs.passed }}
+      failed: ${{ steps.test-summary.outputs.failed }}
+      skipped: ${{ steps.test-summary.outputs.skipped }}
+      duration: ${{ steps.end-time.outputs.duration }}
+      status: ${{ steps.set-status.outputs.status }}
+
+    steps:
+    - name: Start time
+      id: start-time
+      run: |
+        echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
+        echo "start_time_formatted=$(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Cache Maven packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+    - name: Upload Surefire test reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: surefire-reports
+        path: target/surefire-reports
+
+    - name: Archive test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: target/surefire-reports/
+
+    - name: Summarize test results
+      id: test-summary
+      if: always()
+      run: |
+        if [ -d "target/surefire-reports" ] && [ "$(ls -A target/surefire-reports/*.xml 2>/dev/null)" ]; then
+          total=$(grep -h 'testsuite' target/surefire-reports/*.xml | awk -F'"' '{print $4}' | paste -sd+ - | bc || echo "0")
+          failed=$(grep -h 'testsuite' target/surefire-reports/*.xml | awk -F'"' '{print $8}' | paste -sd+ - | bc || echo "0")
+          skipped=$(grep -h 'testsuite' target/surefire-reports/*.xml | awk -F'"' '{print $12}' | paste -sd+ - | bc || echo "0")
+          passed=$((total - failed - skipped))
+        else
+          total=0
+          failed=0
+          skipped=0
+          passed=0
+        fi
+        echo "total=$total" >> $GITHUB_OUTPUT
+        echo "passed=$passed" >> $GITHUB_OUTPUT
+        echo "failed=$failed" >> $GITHUB_OUTPUT
+        echo "skipped=$skipped" >> $GITHUB_OUTPUT
+
+    - name: End time and duration
+      id: end-time
+      if: always()
+      run: |
+        end_time=$(date +%s)
+        start_time=${{ steps.start-time.outputs.start_time }}
+        duration=$((end_time - start_time))
+        min=$((duration / 60))
+        sec=$((duration % 60))
+        echo "duration=${min}m ${sec}s" >> $GITHUB_OUTPUT
+
+    - name: Set job status
+      id: set-status
+      if: always()
+      run: |
+        if [ "${{ steps.maven.outcome }}" = "success" ]; then
+          echo "status=✅ Success" >> $GITHUB_OUTPUT
+          echo "status_color=green" >> $GITHUB_OUTPUT
+        else
+          echo "status=❌ Failure" >> $GITHUB_OUTPUT
+          echo "status_color=red" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Send beautiful email with test summary
+      if: always()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.MAIL_USERNAME }}
+        password: ${{ secrets.MAIL_PASSWORD }}
+        subject: "Spring App Test Results - ${{ github.repository }} #${{ github.run_number }}"
+        to: ${{ secrets.MAIL_RECIPIENT }}
+        from: ${{ secrets.MAIL_USERNAME }}
+        html_body: |
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Test Results</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; background-color:#f5f5f5; padding:20px; margin:0;">
+            <div style="max-width:600px; margin:0 auto; background-color:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:24px;">
+              <h2 style="color:#336699; margin-top:0;">🚀 Test Results for <span style="color:#222;">${{ github.repository }}</span> (Run #${{ github.run_number }})</h2>
+              <div style="margin:20px 0;">
+                <p style="margin:8px 0;"><strong>Workflow:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="color:#0066cc;">View Run Logs</a></p>
+                <p style="margin:8px 0;"><strong>Status:</strong> <span style="color:${{ steps.set-status.outputs.status_color }}; font-weight:bold;">${{ steps.set-status.outputs.status }}</span></p>
+                <p style="margin:8px 0;"><strong>Commit:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}" style="color:#0066cc;">${{ github.sha }}</a></p>
+                <p style="margin:8px 0;"><strong>Message:</strong> <em style="color:#666;">"${{ github.event.head_commit.message }}"</em></p>
+                <p style="margin:8px 0;"><strong>Branch:</strong> <span style="color:#555;">${{ github.ref_name }}</span></p>
+                <p style="margin:8px 0;"><strong>Author:</strong> ${{ github.actor }}</p>
+                <p style="margin:8px 0;"><strong>Started:</strong> ${{ steps.start-time.outputs.start_time_formatted }}</p>
+                <p style="margin:8px 0;"><strong>Duration:</strong> ${{ steps.end-time.outputs.duration }}</p>
+              </div>
+              <hr style="border:none; border-top:1px solid #ddd; margin:20px 0;">
+              <h3 style="color:#336699; margin-bottom:15px;">📊 Test Results</h3>
+              <table style="width:100%; border-collapse:collapse; margin:15px 0;">
+                <thead>
+                  <tr style="background-color:#eeeeff;">
+                    <th style="border:1px solid #ccc; padding:12px; text-align:center; font-weight:bold;">Total</th>
+                    <th style="border:1px solid #ccc; padding:12px; text-align:center; font-weight:bold;">Passed</th>
+                    <th style="border:1px solid #ccc; padding:12px; text-align:center; font-weight:bold;">Failed</th>
+                    <th style="border:1px solid #ccc; padding:12px; text-align:center; font-weight:bold;">Skipped</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="border:1px solid #ccc; padding:12px; text-align:center; font-size:16px; font-weight:bold;">${{ steps.test-summary.outputs.total }}</td>
+                    <td style="border:1px solid #ccc; padding:12px; text-align:center; font-size:16px; font-weight:bold; color:green;">${{ steps.test-summary.outputs.passed }}</td>
+                    <td style="border:1px solid #ccc; padding:12px; text-align:center; font-size:16px; font-weight:bold; color:${{ steps.test-summary.outputs.failed == '0' && 'green' || 'red' }};">${{ steps.test-summary.outputs.failed }}</td>
+                    <td style="border:1px solid #ccc; padding:12px; text-align:center; font-size:16px; color:#666;">${{ steps.test-summary.outputs.skipped }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <hr style="border:none; border-top:1px solid #ddd; margin:20px 0;">
+              <p style="color:#777; font-size:12px; margin-bottom:0;">You are receiving this email because you requested notifications for workflow runs on <strong>${{ github.repository }}</strong>.</p>
+            </div>
+          </body>
+          </html>
+        attachments: target/surefire-reports/*.xml
