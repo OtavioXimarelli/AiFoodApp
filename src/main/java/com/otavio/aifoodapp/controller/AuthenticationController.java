@@ -1,7 +1,7 @@
 package com.otavio.aifoodapp.controller;
 
 import com.otavio.aifoodapp.dto.AuthenticationDTO;
-import com.otavio.aifoodapp.dto.LoginResposneDTO;
+import com.otavio.aifoodapp.dto.LoginResponseDTO;
 import com.otavio.aifoodapp.dto.RegisterDTO;
 import com.otavio.aifoodapp.model.User;
 import com.otavio.aifoodapp.repository.UserRepository;
@@ -26,12 +26,14 @@ public class AuthenticationController {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
-
-    public AuthenticationController(AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService) {
+    private final BCryptPasswordEncoder passwordEncoder;
+    public AuthenticationController(AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService, BCryptPasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.tokenService = tokenService;
+        this.passwordEncoder = passwordEncoder;
     }
+    
 
 
     @PostMapping("/login")
@@ -41,14 +43,14 @@ public class AuthenticationController {
         var token = tokenService.generateToken((User) auth.getPrincipal());
 
 
-        return ResponseEntity.ok(new LoginResposneDTO(token, data.login(), auth.getAuthorities().toString()));
+        return ResponseEntity.ok(new LoginResponseDTO(token, data.login(), auth.getAuthorities().toString()));
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterDTO data) {
-        if (userRepository.findByLogin(data.login()).isPresent()) return ResponseEntity.badRequest().build();
+        if (userRepository.findByLogin(data.login()) != null) return ResponseEntity.badRequest().build();
 
-        String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
+        String encryptedPassword = this.passwordEncoder.encode(data.password());
 
         User newUser = new User(data.login(), encryptedPassword, data.role());
         userRepository.save(newUser);
