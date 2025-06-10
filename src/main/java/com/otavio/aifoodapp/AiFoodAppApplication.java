@@ -1,6 +1,5 @@
 package com.otavio.aifoodapp;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
