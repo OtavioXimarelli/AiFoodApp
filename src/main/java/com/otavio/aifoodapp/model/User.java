@@ -34,6 +34,12 @@ public class User implements UserDetails {
     private String email;
     private UserRoles role;
 
+    public User(String login, String password, UserRoles role) {
+        this.login = login;
+        this.password = password;
+        this.role = role;
+    }
+
     @Override
     public String getUsername() {
         return login;
@@ -46,7 +52,8 @@ public class User implements UserDetails {
 
     @Override
     public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
-        if (this.role == UserRoles.ADMIN) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
+        if (this.role == UserRoles.ADMIN)
+            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
         else return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
