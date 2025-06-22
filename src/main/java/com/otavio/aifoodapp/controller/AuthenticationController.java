@@ -3,7 +3,7 @@ package com.otavio.aifoodapp.controller;
 import com.otavio.aifoodapp.dto.AuthenticationDTO;
 import com.otavio.aifoodapp.dto.LoginResponseDTO;
 import com.otavio.aifoodapp.dto.RegisterDTO;
-import com.otavio.aifoodapp.dto.RegisterResponseDTO;
+
 import com.otavio.aifoodapp.exception.UsernameOrPasswordInvalidExcpetion;
 import com.otavio.aifoodapp.model.User;
 import com.otavio.aifoodapp.repository.UserRepository;
@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,9 +29,9 @@ public class AuthenticationController {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthenticationController(AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService, BCryptPasswordEncoder passwordEncoder) {
+    public AuthenticationController(AuthenticationManager authenticationManager, UserRepository userRepository, TokenService tokenService, PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.tokenService = tokenService;
