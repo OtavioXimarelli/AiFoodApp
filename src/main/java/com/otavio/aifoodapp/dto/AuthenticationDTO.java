@@ -1,4 +1,6 @@
 package com.otavio.aifoodapp.dto;
 
-public record AuthenticationDTO(String login, String password) {
+import jakarta.validation.constraints.NotNull;
+
+public record AuthenticationDTO(@NotNull(message = " Login and password should not be empty") String login, String password) {
 }
