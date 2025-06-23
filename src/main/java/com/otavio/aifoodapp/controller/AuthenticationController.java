@@ -3,7 +3,7 @@ package com.otavio.aifoodapp.controller;
 import com.otavio.aifoodapp.dto.AuthenticationDTO;
 import com.otavio.aifoodapp.dto.LoginResponseDTO;
 import com.otavio.aifoodapp.dto.RegisterDTO;
-
+import com.otavio.aifoodapp.exception.UserAlreadyExistsException;
 import com.otavio.aifoodapp.exception.UsernameOrPasswordInvalidExcpetion;
 import com.otavio.aifoodapp.model.User;
 import com.otavio.aifoodapp.repository.UserRepository;
@@ -55,7 +55,7 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO data) {
-        if (userRepository.findByLogin(data.login()) != null) return ResponseEntity.badRequest().build();
+        if (userRepository.findByLogin(data.login()) != null) throw new UserAlreadyExistsException("User already exists");
 
         String encryptedPassword = this.passwordEncoder.encode(data.password());
 
