@@ -1,93 +1,103 @@
-# Roadmap para MVP do AiFoodApp
+# Roadmap de Sprints para o AiFoodApp
 
-## Fase 1: Fundação e Correção (Semanas 1-2)
+## Sprint 1: Qualidade, Estabilidade e Refinamento da Base
 
-### Corrigir problemas estruturais
-- Resolver problemas no repositório FoodItemRepository
-- Corrigir estrutura do serviço TextGenService
-- Padronizar tratamento de erros da API
+**Objetivo da Sprint:** Fortalecer a fundação do projeto, garantindo que as funcionalidades existentes sejam confiáveis e robustas antes de adicionar novos recursos. Esta sprint foca em testes e melhorias técnicas críticas.
 
-### Aprimorar o modelo de dados
-- Adicionar campos nutricionais básicos ao modelo FoodItem
-- Incluir propriedades para categorização de alimentos
-- Definir relacionamentos entre entidades
+### Implementar Cobertura de Testes Unitários e de Integração
 
-## Fase 2: Funcionalidades Core de IA (Semanas 3-5)
+*   **Descrição:** Criar um conjunto sólido de testes automatizados para validar a lógica de negócio e os endpoints da API. Atualmente, o projeto carece de testes significativos.
+*   **Tarefas:**
+   *   **Testes de Serviço:** Escrever testes unitários para `FoodItemService`, `RecipeService` e `AuthorizationService`, utilizando mocks para isolar a lógica de negócio.
+   *   **Testes de Controller:** Implementar testes de integração usando `MockMvc` para `FoodItemController`, `RecipeController` e `AuthenticationController` para validar as requisições, respostas HTTP e segurança dos endpoints.
 
-### Implementar geração de receitas com base em alimentos disponíveis
-- Aprimorar o TextGenService existente para gerar melhores receitas
-- Criar interface para seleção de alimentos disponíveis
-- Implementar filtros para preferências alimentares (vegetariano, sem glúten, etc.)
+### Refatorar o Parsing de Receitas da IA
 
-### Desenvolver análise nutricional básica
-- Criar serviço de análise nutricional utilizando IA
-- Desenvolver endpoints para solicitar análises personalizadas
-- Implementar visualização clara de insights nutricionais
+*   **Descrição:** Substituir o método atual de parsing de texto no `ChatService`, que é frágil, por um método mais confiável baseado em JSON.
+*   **Tarefas:**
+   *   Atualizar o prompt enviado à Maritaca AI para exigir que a resposta da receita seja sempre em formato JSON estruturado.
+   *   Modificar o método `parseRecipeFromText` em `ChatService` para usar uma biblioteca (como Jackson) para desserializar a string JSON diretamente para o objeto `Recipe` ou um DTO correspondente.
 
-### Criar controller para funcionalidades de IA
-- Desenvolver endpoints para solicitação de insights nutricionais
-- Implementar rotas para geração de receitas personalizadas
-- Estabelecer padrão de resposta e tratamento de erros
+### Implementar Cache para Análise Nutricional
 
-## Fase 3: Funcionalidades Essenciais Tradicionais (Semanas 6-8)
+*   **Descrição:** Reduzir o número de chamadas repetitivas à API de IA para receitas que já foram analisadas, melhorando a performance e reduzindo custos.
+*   **Tarefas:**
+   *   Habilitar o suporte a cache do Spring (`@EnableCaching`).
+   *   Anotar o método `analyzeNutritionalProfile` no `ChatService` com `@Cacheable` para que os resultados sejam armazenados em cache com base no ID da receita.
 
-### Implementar sistema de categorização de alimentos
-- Adicionar enums ou constantes para grupos alimentares
-- Criar endpoints para listar alimentos por grupo
-- Desenvolver interface para visualizar alimentos por categoria
+### Associar Receitas Geradas ao Usuário
 
-### Desenvolver sistema básico de listas de compras
-- Criar modelos para lista de compras e itens
-- Implementar endpoints para gerenciamento de listas
-- Desenvolver funcionalidade para adicionar ingredientes de receitas à lista
+*   **Descrição:** Vincular cada receita gerada ao usuário que a solicitou. Isso é fundamental para funcionalidades futuras como o histórico de receitas.
+*   **Tarefas:**
+   *   Adicionar um relacionamento Many-to-One da entidade `Recipe` para a entidade `User`.
+   *   Atualizar a lógica em `RecipeController` e `RecipeService` para identificar o usuário autenticado e associá-lo à nova receita ao salvá-la.
 
-### Implementar tracking de macronutrientes
-- Criar modelo de dados para armazenar consumo diário
-- Desenvolver endpoints para registrar refeições
-- Implementar visualização básica de macronutrientes consumidos
+---
 
-## Fase 4: Integração e Refinamento (Semanas 9-10)
+## Sprint 2: Aprimoramento da IA e Categorização
 
-### Integrar funcionalidades e melhorar UX
-- Conectar geração de receitas com listas de compras
-- Permitir compartilhamento de receitas geradas
-- Refinar feedback de usuário e interfaces
+**Objetivo da Sprint:** Tornar a interação com a IA mais poderosa e útil para o usuário, e implementar funcionalidades de organização de alimentos.
 
-### Implementar testes e otimizações
-- Criar testes unitários para serviços principais
-- Otimizar chamadas às APIs externas (caching, etc.)
-- Identificar e resolver possíveis gargalos de performance
+### Adicionar Filtros Avançados na Geração de Receitas
 
-### Preparar para lançamento do MVP
-- Documentação básica da API
-- Configuração de ambiente de produção
-- Configuração de monitoramento básico
+*   **Descrição:** Permitir que o usuário personalize a geração de receitas com base em preferências alimentares, ingredientes específicos e outras restrições.
+*   **Tarefas:**
+   *   Modificar o endpoint `GET /api/recipes/gen` para aceitar `RequestParams`, como `dietaryPreference` (ex: "vegetariano", "vegano") e `excludeIngredients` (lista de nomes de ingredientes a serem evitados).
+   *   Aprimorar o método `generateRecipe` no `ChatService` para incorporar dinamicamente esses filtros no prompt enviado para a IA.
 
-## Fase 5: Lançamento MVP e Feedback Inicial (Semanas 11-12)
+### Criar Endpoint para Listar Alimentos por Categoria
 
-### Lançamento MVP
-- Deploy da aplicação
-- Configuração de CI/CD básico
-- Preparação para coleta de feedback
+*   **Descrição:** Expor um endpoint que permita ao cliente (frontend) buscar e exibir alimentos agrupados por sua categoria (`FoodGroup`).
+*   **Tarefas:**
+   *   Adicionar o método `List<FoodItem> findByFoodGroup(FoodGroup foodGroup);` na interface `FoodItemRepository`.
+   *   Implementar um novo método no `FoodItemService` para chamar o repositório.
+   *   Criar um novo endpoint no `FoodItemController`, como `GET /api/foods/by-category`, que aceita a categoria como parâmetro.
 
-### Coleta de feedback inicial
-- Implementar mecanismo básico de coleta de feedback
-- Preparar para o próximo ciclo de desenvolvimento
+---
 
-## Próximos Passos Pós-MVP (Futuro)
+## Sprint 3: Sistema de Listas de Compras
 
-1. **Funcionalidades avançadas de IA**
-   - Recomendação de substituições saudáveis
-   - Assistente virtual de nutrição
-   - Previsão de validade inteligente
+**Objetivo da Sprint:** Desenvolver a funcionalidade completa de listas de compras, um recurso essencial do aplicativo.
 
-2. **Expansões principais**
-   - Sistema completo de planos alimentares
-   - Integração com wearables
-   - Scanner de código de barras
-   - Compartilhamento social
+### Modelar e Implementar a Estrutura da Lista de Compras
 
-3. **Refinamentos técnicos**
-   - Arquitetura escalável para mais usuários
-   - Sistema avançado de analytics
-   - Personalização avançada baseada em ML
+*   **Descrição:** Criar a base de dados e as classes de domínio para suportar as listas de compras.
+*   **Tarefas:**
+   *   Criar as entidades JPA `ShoppingList` (com relacionamento para `User`) e `ShoppingListItem` (com relacionamento para `ShoppingList` e `FoodItem`).
+   *   Gerar as migrações do banco de dados correspondentes usando Flyway.
+   *   Implementar os `JpaRepository` para as novas entidades.
+
+### Desenvolver o Serviço e os Endpoints para Gerenciamento da Lista
+
+*   **Descrição:** Construir a lógica de negócio e a API para que o usuário possa interagir com suas listas.
+*   **Tarefas:**
+   *   Criar o `ShoppingListService` com métodos para: criar/buscar a lista de um usuário, adicionar/remover/atualizar itens.
+   *   Desenvolver o `ShoppingListController` com endpoints RESTful para todas as operações do serviço.
+
+---
+
+## Sprint 4: Integração e Experiência do Usuário (UX)
+
+**Objetivo da Sprint:** Conectar as funcionalidades existentes para criar uma experiência de usuário coesa e fluida.
+
+### Integrar Receitas com a Lista de Compras
+
+*   **Descrição:** Criar uma funcionalidade "one-click" para que o usuário possa adicionar todos os ingredientes de uma receita diretamente em sua lista de compras.
+*   **Tarefas:**
+   *   Criar um novo endpoint, como `POST /api/recipes/{recipeId}/add-to-shopping-list`.
+   *   Implementar a lógica no `RecipeService` ou `ShoppingListService` que busca os ingredientes da receita (`RecipeIngredient`) e os adiciona na lista de compras do usuário autenticado.
+
+### Desenvolver Histórico de Receitas do Usuário
+
+*   **Descrição:** Criar uma tela ou endpoint onde o usuário possa ver todas as receitas que ele gerou anteriormente.
+*   **Tarefas:**
+   *   Criar um novo método no `RecipeRepository` para buscar receitas por ID de usuário (`findByUserId`).
+   *   Expor um endpoint `GET /api/recipes/my-history` no `RecipeController` que retorna a lista de receitas para o usuário logado.
+
+---
+
+## Próximos Passos (Pós-MVP)
+
+*   Desenvolver Sistema de Tracking de Macronutrientes
+*   Funcionalidades Avançadas de IA (ex: substituições saudáveis, planejamento de refeições)
+*   Construção da Interface de Usuário (Frontend)
