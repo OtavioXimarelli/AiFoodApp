@@ -37,11 +37,10 @@ public class RecipeController {
     public Mono<ResponseEntity<List<Recipe>>> generateRecipe() {
         List<FoodItem> foodItems = foodItemService.listAll();
         return chatService.generateRecipe(foodItems)
-                .map(recipes -> recipes.stream()
-                        .map(recipeService::save)
-                        .collect(Collectors.toList()))
+                .map(recipeService::saveAll)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
+
     }
 
     @GetMapping("/analyze/{id}")
