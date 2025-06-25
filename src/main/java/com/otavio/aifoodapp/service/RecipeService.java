@@ -22,6 +22,8 @@ public class RecipeService {
         return recipeRepository.save(recipe);
     }
 
+    public List<Recipe> saveAll(List<Recipe> recipes) {return recipeRepository.saveAll(recipes);}
+
     public List<Recipe> listAll() {
         return recipeRepository.findAll();
     }
