@@ -2,6 +2,7 @@ package com.otavio.aifoodapp.service;
 
 
 import com.otavio.aifoodapp.config.MaritacaChatClient;
+import com.otavio.aifoodapp.mapper.RecipeMapper;
 import com.otavio.aifoodapp.model.FoodItem;
 import com.otavio.aifoodapp.model.Recipe;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -19,16 +20,18 @@ import java.util.stream.Collectors;
 @Service
 public class ChatService {
     private final MaritacaChatClient maritacaChatClient;
+    private final RecipeMapper recipeMapper;
 
 
     @Value("${maritaca.system.prompt}")
     private String systemPrompt;
 
-    public ChatService(MaritacaChatClient maritacaChatClient) {
+    public ChatService(MaritacaChatClient maritacaChatClient, RecipeMapper recipeMapper) {
         this.maritacaChatClient = maritacaChatClient;
+        this.recipeMapper = recipeMapper;
     }
 
-    public Mono<String> generateRecipe(List<FoodItem> foodItems) {
+    public Mono<List<Recipe>> generateRecipe(List<FoodItem> foodItems) {
         String food = foodItems.stream()
                 .map(item -> String.format("%s- Quantidade: %d, Validade: %s",
                         item.getName(), item.getQuantity(),
@@ -38,19 +41,8 @@ public class ChatService {
         //Prompt de teste
 //        String prompt = "Me mostre qual a estrutura do nosso banco de dados e quais itens estao armazenados nele";
 
-        String prompt = "Generate a recipe strictly following the criteria below.\n\n" +
-                "**Available Ingredients:**\n" +
-                food + "\n\n" +
-                "**Recipe Criteria:**\n" +
-                "1.  **Language:** Portuguese\n" +
-                "2.  **Servings:** 1 person\n" +
-                "3.  **Style:** Practical (simple steps), quick (fitness-focused), healthy, and tasty.\n" +
-                "4.  **Mandatory Output:**\n" +
-                "    * Dish Name (or what it contains)\n" +
-                "    * Estimated Total Preparation Time\n" +
-                "    * Detailed Preparation Method (step by step)\n" +
-                "    * Nutritional Estimate (Calories, Proteins, Carbohydrates, Fats)\n\n" +
-                "**Note:** The answer must be in Portuguese.";
+        String prompt = "Gere uma ou mais receitas... A resposta DEVE ser um array JSON válido. Cada objeto no array deve ter a seguinte estrutura: " +
+                "{\"dishName\": \"NOME_DO_PRATO\", \"prepTime\": \"TEMPO_DE_PREPARO\", \"instructions\": [\"Passo 1\", \"Passo 2\"], \"nutritionalInfo\": [\"Calorias: X kcal\", \"Proteínas: Y g\"]}";
 
 
         Prompt chatPrompt = new Prompt(List.of(
@@ -59,7 +51,8 @@ public class ChatService {
         ));
 
         return maritacaChatClient.call(chatPrompt)
-                .map(response -> response.getResult().getOutput().getText());
+                .map(response -> response.getResult().getOutput().getText())
+                .map(recipeMapper::parseRecipeFromJson);
     }
 
     public Mono<String> analyzeNutritionalProfile(Recipe recipe) {
@@ -86,40 +79,5 @@ public class ChatService {
     public Mono<String> suggestDietaryAdjustments(List<FoodItem> foodItems, String dietaryPreference) {
 
         return null;
-    }
-
-    public Recipe parseRecipeFromText(String recipeText, List<FoodItem> foodItem) {
-        Recipe recipe = new Recipe();
-        List<String> instructions = new ArrayList<>();
-        List<String> nutritionalInfo = new ArrayList<>();
-        String currentSection = "";
-
-        String[] lines = recipeText.split("\\r?\\n");
-        for (String line : lines) {
-            line = line.trim();
-            if (line.toLowerCase().startsWith("nome do prato:")) {
-                recipe.setName(line.substring("nome do prato:".length()).trim());
-            } else if (line.toLowerCase().startsWith("tempo de preparo:")) {
-                recipe.setDescription(line.substring("tempo de preparo:".length()).trim());
-            } else if (line.toLowerCase().startsWith("modo de preparo:")) {
-                currentSection = "instructions";
-            } else if (line.toLowerCase().startsWith("informação nutricional:")) {
-                currentSection = "nutritional";
-            } else if (!line.isEmpty()) {
-                switch (currentSection) {
-                    case "instructions":
-                        instructions.add(line);
-                        break;
-                    case "nutritional":
-                        nutritionalInfo.add(line);
-                        break;
-                }
-            }
-        }
-        recipe.setInstructions(instructions);
-        recipe.setNutritionalInfo(nutritionalInfo);
-        recipe.setQuantity(1);
-        recipe.setExpiration("");
-        return recipe;
     }
 }
