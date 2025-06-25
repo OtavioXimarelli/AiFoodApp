@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +39,10 @@ public class RecipeController {
     public Mono<ResponseEntity<List<Recipe>>> generateRecipe() {
         List<FoodItem> foodItems = foodItemService.listAll();
         return chatService.generateRecipe(foodItems)
-                .map(recipeService::saveAll)
+                .flatMap(recipes ->
+                        Mono.fromCallable(() -> recipeService.saveAll(recipes))
+                                .subscribeOn(Schedulers.boundedElastic())
+                        )
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
 
