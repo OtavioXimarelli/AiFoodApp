@@ -15,11 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/recipes")
@@ -42,12 +40,12 @@ public class RecipeController {
     @GetMapping("/gen")
     public Mono<ResponseEntity<List<RecipeDto>>> generateRecipe() {
         List<FoodItem> foodItems = foodItemService.listAll();
+
         return chatService.generateRecipe(foodItems)
-                .flatMap(recipesToSave ->
-                        Mono.fromCallable(() -> recipeService.saveAllAndInitialize(recipesToSave))
+                .flatMap(recipes ->
+                        Mono.fromCallable(() -> recipeService.saveAndMapToDto(recipes))
                                 .subscribeOn(Schedulers.boundedElastic())
                 )
-                .map(recipeMapper::toDto)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
