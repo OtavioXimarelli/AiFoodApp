@@ -1,5 +1,7 @@
 package com.otavio.aifoodapp.controller;
 
+import com.otavio.aifoodapp.dto.RecipeDto;
+import com.otavio.aifoodapp.mapper.RecipeMapper;
 import com.otavio.aifoodapp.model.FoodItem;
 import com.otavio.aifoodapp.model.Recipe;
 import com.otavio.aifoodapp.service.FoodItemService;
@@ -28,21 +30,24 @@ public class RecipeController {
     private final FoodItemService foodItemService;
     private final ChatService chatService;
     private final RecipeService recipeService;
+    private final RecipeMapper recipeMapper;
 
-    public RecipeController(FoodItemService foodItemService, ChatService chatService, RecipeService recipeService) {
+    public RecipeController(FoodItemService foodItemService, ChatService chatService, RecipeService recipeService, RecipeMapper recipeMapper) {
         this.foodItemService = foodItemService;
         this.chatService = chatService;
         this.recipeService = recipeService;
+        this.recipeMapper = recipeMapper;
     }
 
     @GetMapping("/gen")
-    public Mono<ResponseEntity<List<Recipe>>> generateRecipe() {
+    public Mono<ResponseEntity<List<RecipeDto>>> generateRecipe() {
         List<FoodItem> foodItems = foodItemService.listAll();
         return chatService.generateRecipe(foodItems)
                 .flatMap(recipes ->
                         Mono.fromCallable(() -> recipeService.saveAll(recipes))
                                 .subscribeOn(Schedulers.boundedElastic())
                         )
+                .map(recipeMapper::toDto)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
 
