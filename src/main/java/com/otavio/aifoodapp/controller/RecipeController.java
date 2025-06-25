@@ -43,14 +43,13 @@ public class RecipeController {
     public Mono<ResponseEntity<List<RecipeDto>>> generateRecipe() {
         List<FoodItem> foodItems = foodItemService.listAll();
         return chatService.generateRecipe(foodItems)
-                .flatMap(recipes ->
-                        Mono.fromCallable(() -> recipeService.saveAll(recipes))
+                .flatMap(recipesToSave ->
+                        Mono.fromCallable(() -> recipeService.saveAllAndInitialize(recipesToSave))
                                 .subscribeOn(Schedulers.boundedElastic())
-                        )
+                )
                 .map(recipeMapper::toDto)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
-
     }
 
     @GetMapping("/analyze/{id}")
