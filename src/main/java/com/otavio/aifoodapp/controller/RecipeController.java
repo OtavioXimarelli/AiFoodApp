@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/recipes")
@@ -33,11 +34,12 @@ public class RecipeController {
     }
 
     @GetMapping("/gen")
-    public Mono<ResponseEntity<Recipe>> generateRecipe() {
+    public Mono<ResponseEntity<List<Recipe>>> generateRecipe() {
         List<FoodItem> foodItems = foodItemService.listAll();
         return chatService.generateRecipe(foodItems)
-                .map(recipeText -> chatService.parseRecipeFromText(recipeText, foodItems))
-                .map(recipeService::save)
+                .map(recipes -> recipes.stream()
+                        .map(recipeService::save)
+                        .collect(Collectors.toList()))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
