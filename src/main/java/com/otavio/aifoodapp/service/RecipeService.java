@@ -5,7 +5,7 @@ import com.otavio.aifoodapp.mapper.RecipeMapper;
 import com.otavio.aifoodapp.model.Recipe;
 import com.otavio.aifoodapp.model.RecipeIngredient;
 import com.otavio.aifoodapp.repository.RecipeRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,10 +17,12 @@ import java.util.Optional;
 @Service
 public class RecipeService {
     private final RecipeRepository recipeRepository;
+    private final RecipeMapper recipeMapper;
 
 
-    public RecipeService(RecipeRepository recipeRepository) {
+    public RecipeService(RecipeRepository recipeRepository, RecipeMapper recipeMapper) {
         this.recipeRepository = recipeRepository;
+        this.recipeMapper = recipeMapper;
     }
 
 
@@ -57,20 +59,21 @@ public class RecipeService {
     }
 
     @Transactional
-    public List<Recipe> saveAllAndInitialize(List<Recipe> recipes) {
+    public List<RecipeDto> saveAndMapToDto(List<Recipe> recipes) {
+
         List<Recipe> savedRecipes = recipeRepository.saveAll(recipes);
+
 
         for (Recipe recipe : savedRecipes) {
             Hibernate.initialize(recipe.getInstructions());
             Hibernate.initialize(recipe.getNutritionalInfo());
             Hibernate.initialize(recipe.getIngredientsList());
-
             for (RecipeIngredient ingredient : recipe.getIngredientsList()) {
                 Hibernate.initialize(ingredient.getFoodItem());
             }
         }
 
-        return savedRecipes;
 
+        return recipeMapper.toDto(savedRecipes);
     }
 }
