@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: AiFoodApp
+
+  # Datasource (para a aplicação)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5431/foodDB}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Google OAuth2 Configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v2/userinfo
+            user-name-attribute: email
+
+
+# Maritaca AI Configuration
+maritaca:
+  api:
+    url: ${MARITACA_API_URL:https://chat.maritaca.ai/api/chat/completions}
+    key: ${MARITACA_API_KEY}
+    model: ${MARITACA_API_MODEL:sabiazinho-3}
+  system:
+    prompt: ${MARITACA_SYSTEM_PROMPT:"Você é um assistente culinário"}
+
+# JWT Configuration (keep for now during migration)
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET:dever-ser-definido-no-dotenv}
+
+# App Configuration
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:8082}
+
+# Logging
+logging:
+  level:
+    org.springframework.security: TRACE
+server:
+  servlet:
+    session:
+      cookie:
+        name: JSESSIONID
+        http-only: true
+        secure: false
+        same-site: lax
