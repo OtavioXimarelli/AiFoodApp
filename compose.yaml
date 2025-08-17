@@ -3,14 +3,17 @@ services:
     image: postgres:15
     container_name: postgresBD
     environment:
-      POSTGRES_DB: fooddb
-      POSTGRES_USER: foodappadm
-      POSTGRES_PASSWORD: foodappadminconnectpass
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - aifood-net
+    # ⚠️ Exponha a porta APENAS em desenvolvimento, nunca em produção
+    # ports:
+    #   - "5431:5432"
 
   aifoodapp:
     build: .
@@ -18,10 +21,15 @@ services:
     depends_on:
       - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fooddb
-      SPRING_DATASOURCE_USERNAME: foodappadm
-      SPRING_DATASOURCE_PASSWORD: foodappadminconnectpass
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_PROFILES_ACTIVE: prod
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      MARITACA_API_KEY: ${MARITACA_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - "8080:8080"
     restart: unless-stopped

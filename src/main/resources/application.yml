@@ -45,12 +45,11 @@ spring:
 maritaca:
   api:
     url: ${MARITACA_API_URL:https://chat.maritaca.ai/api/chat/completions}
-    key: ${MARITACA_API_KEY}
+    key: ${MARITACA_API_KEY:}
     model: ${MARITACA_API_MODEL:sabiazinho-3}
   system:
-    prompt: ${MARITACA_SYSTEM_PROMPT:"Voc� � um assistente culin�rio"}
+    prompt: ${MARITACA_SYSTEM_PROMPT:"Vocé um assistente culinário"}
 
-# JWT Configuration (keep for now during migration)
 
 
 # App Configuration
