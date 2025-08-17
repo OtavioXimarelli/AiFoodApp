@@ -38,3 +38,5 @@ build/
 
 ### VS Code ###
 .vscode/
+/client_secret_458549128844-47sv95uhp1dgitkatr726nbl90h28q0a.apps.googleusercontent.com.json
+/src/main/resources/db/migration/doc.md
