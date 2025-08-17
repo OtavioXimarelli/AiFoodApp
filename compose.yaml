@@ -13,9 +13,6 @@ services:
     restart: unless-stopped
     networks:
       - aifood-net
-    # ⚠️ Em produção remova o mapeamento de porta, não exponha 5432 para fora
-    # ports:
-    #   - "5431:5432"
 
   aifoodapp:
     build: .
