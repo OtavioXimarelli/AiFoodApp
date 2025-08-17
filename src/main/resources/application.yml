@@ -2,9 +2,8 @@ spring:
   application:
     name: AiFoodApp
 
-  # Datasource (para a aplica��o)
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5431/foodDB}
+    url: ${DB_URL:jdbc:postgresql://localhost:5431/fooddb}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
