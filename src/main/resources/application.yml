@@ -2,7 +2,7 @@ spring:
   application:
     name: AiFoodApp
 
-  # Datasource (para a aplicação)
+  # Datasource (para a aplicaï¿½ï¿½o)
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5431/foodDB}
     username: ${DB_USERNAME:postgres}
@@ -48,23 +48,22 @@ maritaca:
     key: ${MARITACA_API_KEY}
     model: ${MARITACA_API_MODEL:sabiazinho-3}
   system:
-    prompt: ${MARITACA_SYSTEM_PROMPT:"Você é um assistente culinário"}
+    prompt: ${MARITACA_SYSTEM_PROMPT:"Vocï¿½ ï¿½ um assistente culinï¿½rio"}
 
 # JWT Configuration (keep for now during migration)
-api:
-  security:
-    token:
-      secret: ${JWT_SECRET:dever-ser-definido-no-dotenv}
+
 
 # App Configuration
 app:
   frontend:
-    url: ${FRONTEND_URL:http://localhost:8082}
+    url: ${FRONTEND_URL:https://aifoodapp.site}
 
 # Logging
 logging:
   level:
-    org.springframework.security: TRACE
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.web: DEBUG
 server:
   servlet:
     session:
