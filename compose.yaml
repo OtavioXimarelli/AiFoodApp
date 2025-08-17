@@ -1,23 +1,40 @@
-version: '3.8'
+version: "3.8"
+
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:15
     container_name: postgresBD
     environment:
-      POSTGRES_DB: foodDB
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5431:5432"
-    restart: always
+      POSTGRES_DB: fooddb
+      POSTGRES_USER: foodappadm
+      POSTGRES_PASSWORD: foodappadminconnectpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - aifood-net
+    # ⚠️ Em produção remova o mapeamento de porta, não exponha 5432 para fora
+    # ports:
+    #   - "5431:5432"
 
   aifoodapp:
     build: .
+    container_name: aifoodapp
     depends_on:
       - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/foodDB
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fooddb
+      SPRING_DATASOURCE_USERNAME: foodappadm
+      SPRING_DATASOURCE_PASSWORD: foodappadminconnectpass
+      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - aifood-net
+
+volumes:
+  postgres_data:
+
+networks:
+  aifood-net:
