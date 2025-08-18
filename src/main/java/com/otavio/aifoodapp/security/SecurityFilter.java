@@ -1,34 +1,44 @@
 package com.otavio.aifoodapp.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Deprecated no-op filter kept for compatibility.
  * JWT/token handling has been removed in favor of OAuth2 login with server-side sessions.
  */
 @Component
-public class SecurityFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(SecurityFilter.class);
+public class SecurityFilter implements Filter {
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityFilter.class);
 
-    public SecurityFilter() {
-        // no-op
+    @Override
+    public void init(FilterConfig filterConfig) {
+        // No initialization needed
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         // Just pass the request through; no JWT/token processing anymore
-        logger.trace("SecurityFilter (no-op) passing through request to {}", request.getRequestURI());
-        filterChain.doFilter(request, response);
+        if (request instanceof HttpServletRequest httpRequest) {
+            LOG.trace("SecurityFilter (no-op) passing through request to {}", httpRequest.getRequestURI());
+        }
+        chain.doFilter(request, response);
+    }
+
+    @Override
+    public void destroy() {
+        // No cleanup needed
     }
 }
