@@ -1,13 +1,13 @@
 package com.otavio.aifoodapp.dto;
 
 
-import com.otavio.aifoodapp.model.RecipeIngredient;
+// import com.otavio.aifoodapp.model.RecipeIngredient; // Unused import removed
+import java.util.List;
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
