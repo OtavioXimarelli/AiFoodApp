@@ -1,14 +1,27 @@
 package com.otavio.aifoodapp.model;
 
-import com.otavio.aifoodapp.enums.UserRoles;
-import jakarta.persistence.*;
-import lombok.*;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.otavio.aifoodapp.enums.UserRoles;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity(name = "users")
 @Table(name = "tb_users")
@@ -84,5 +97,9 @@ public class User implements UserDetails {
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return isActive != null ? isActive : true; }
+    @Override public boolean isEnabled() { 
+        // If isActive is null or true, return true
+        // Only return false if isActive is explicitly set to false
+        return isActive == null || Boolean.TRUE.equals(isActive);
+    }
 }
