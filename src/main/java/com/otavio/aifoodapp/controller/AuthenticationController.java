@@ -1,19 +1,24 @@
 package com.otavio.aifoodapp.controller;
 
-import com.otavio.aifoodapp.dto.UserDTO;
-import com.otavio.aifoodapp.model.User;
-import com.otavio.aifoodapp.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import com.otavio.aifoodapp.dto.UserDTO;
+import com.otavio.aifoodapp.model.User;
+import com.otavio.aifoodapp.repository.UserRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,7 +39,7 @@ public class AuthenticationController {
         if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
             String email = oauth2User.getAttribute("email");
             String name = oauth2User.getAttribute("name");
-            String picture = oauth2User.getAttribute("picture");
+            // String picture = oauth2User.getAttribute("picture"); // Not used currently
 
             Optional<User> dbUser = (email != null) ? userRepository.findByEmail(email) : Optional.empty();
             if (dbUser.isPresent()) {
