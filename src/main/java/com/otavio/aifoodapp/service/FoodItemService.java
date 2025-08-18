@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -34,18 +35,67 @@ public class FoodItemService {
      */
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null) {
+            System.out.println("Authentication is NULL");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication context is null");
+        }
+        
+        if (!authentication.isAuthenticated()) {
+            System.out.println("User not authenticated: " + authentication);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
         
         String username = authentication.getName();
-        User user = (User) userRepository.findByLogin(username);
+        System.out.println("Authentication principal: " + authentication.getPrincipal().getClass().getName());
+        System.out.println("Looking up user by: " + username);
         
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+        // Try to find by email first since OAuth might use email as the principal name
+        Optional<User> userByEmail = userRepository.findByEmail(username);
+        if (userByEmail.isPresent()) {
+            System.out.println("Found user by email: " + username);
+            return userByEmail.get();
+        } else {
+            System.out.println("No user found by email: " + username);
         }
         
-        return user;
+        // If not found by email, try by login
+        UserDetails userDetails = userRepository.findByLogin(username);
+        if (userDetails != null && userDetails instanceof User) {
+            System.out.println("Found user by login: " + username);
+            return (User) userDetails;
+        } else if (userDetails == null) {
+            System.out.println("No user found by login: " + username);
+        } else {
+            System.out.println("Found userDetails but not User instance: " + userDetails.getClass().getName());
+        }
+        
+        // If the authentication principal is already a User, use that
+        // Using standard instanceof check to support older Java versions
+        if (authentication.getPrincipal() instanceof User) {
+            User user = (User) authentication.getPrincipal();
+            System.out.println("Principal is already a User: " + user.getUsername());
+            return user;
+        }
+        
+        // Print detailed debugging info
+        System.out.println("Authentication failed. Details:");
+        System.out.println("- Username: " + username);
+        System.out.println("- Principal type: " + (authentication.getPrincipal() != null ? 
+            authentication.getPrincipal().getClass().getName() : "null"));
+        System.out.println("- Authorities: " + authentication.getAuthorities());
+        
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, 
+            "User not found with identifier: " + username + 
+            ", Principal type: " + (authentication.getPrincipal() != null ? 
+                authentication.getPrincipal().getClass().getName() : "null"));
+    }
+    
+    /**
+     * Public method for testing user authentication
+     * @return the authenticated user
+     */
+    public User getUserForTesting() {
+        return getCurrentUser();
     }
 
     /**
