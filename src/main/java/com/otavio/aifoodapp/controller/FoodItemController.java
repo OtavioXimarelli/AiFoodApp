@@ -30,8 +30,15 @@ import com.otavio.aifoodapp.service.FoodItemService;
 
 @RestController
 @RequestMapping("/api/foods")
-@CrossOrigin(origins = {"http://localhost:5173", "https://aifoodapp.site"}, allowCredentials = "true")
+@CrossOrigin(
+    origins = {"http://localhost:5173", "https://aifoodapp.site"}, 
+    allowCredentials = "true",
+    allowedHeaders = {"Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "X-XSRF-TOKEN"},
+    exposedHeaders = {"X-XSRF-TOKEN"}
+)
 public class FoodItemController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FoodItemController.class);
+    
     private final FoodItemService foodItemService;
     private final FoodMapper foodMapper;
 
@@ -51,12 +58,12 @@ public class FoodItemController {
     @PostMapping("/create")
     public ResponseEntity<?> create(@Valid @RequestBody FoodItemCreateDto createDto) {
         try {
-            System.out.println("Received create food request: " + createDto.getName());
+            log.info("Received create food request: {}", createDto.getName());
             FoodItem foodItem = foodMapper.map(createDto);
             FoodItem savedItem = foodItemService.saveWithAiEnhancement(foodItem);
             return ResponseEntity.status(HttpStatus.CREATED).body(foodMapper.map(savedItem));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error creating food item: {}", e.getMessage(), e);
             // Return error details for debugging
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", e.getMessage(),
@@ -83,7 +90,7 @@ public class FoodItemController {
             return ResponseEntity.ok(foodDtos);
         } catch (Exception e) {
             // Log the exception details for debugging
-            e.printStackTrace();
+            log.error("Error listing food items: {}", e.getMessage(), e);
             throw e;
         }
     }
@@ -124,7 +131,7 @@ public class FoodItemController {
                 ));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error testing auth: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", e.getMessage(),
                 "type", e.getClass().getName()
