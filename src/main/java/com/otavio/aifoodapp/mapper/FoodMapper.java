@@ -1,14 +1,16 @@
 package com.otavio.aifoodapp.mapper;
+import java.util.ArrayList;
 import java.util.List;
-
-import com.otavio.aifoodapp.dto.FoodDto;
-import com.otavio.aifoodapp.model.FoodItem;
-import com.otavio.aifoodapp.enums.FoodGroup;
 
 import org.springframework.stereotype.Component;
 
-@Component
+import com.otavio.aifoodapp.dto.FoodDto;
+import com.otavio.aifoodapp.dto.FoodItemCreateDto;
+import com.otavio.aifoodapp.enums.FoodGroup;
+import com.otavio.aifoodapp.model.FoodItem;
+import com.otavio.aifoodapp.model.User;
 
+@Component
 public class FoodMapper {
     public FoodItem map(FoodDto foodDto) {
         FoodItem foodItem = new FoodItem();
@@ -23,11 +25,25 @@ public class FoodMapper {
         foodItem.setFiber(foodDto.getFiber());
         foodItem.setSugar(foodDto.getSugar());
         foodItem.setSodium(foodDto.getSodium());
-        foodItem.setFoodGroup(FoodGroup.valueOf(foodDto.getFoodGroup()));
-        foodItem.setTags(List.of(foodDto.getTags().split(",")));
+        foodItem.setFoodGroup(foodDto.getFoodGroup() != null ? FoodGroup.valueOf(foodDto.getFoodGroup()) : null);
+        foodItem.setTags(foodDto.getTags() != null ? List.of(foodDto.getTags().split(",")) : new ArrayList<>());
         return foodItem;
     }
 
+    public FoodItem map(FoodItemCreateDto createDto) {
+        FoodItem foodItem = new FoodItem();
+        foodItem.setName(createDto.getName());
+        foodItem.setQuantity(createDto.getQuantity());
+        foodItem.setExpiration(createDto.getExpiration());
+        // Other fields will be populated by the AI service
+        return foodItem;
+    }
+
+    public FoodItem map(FoodItemCreateDto createDto, User user) {
+        FoodItem foodItem = map(createDto);
+        foodItem.setUser(user);
+        return foodItem;
+    }
 
     public FoodDto map(FoodItem foodItem) {
         FoodDto foodDto = new FoodDto();
@@ -42,8 +58,8 @@ public class FoodMapper {
         foodDto.setFiber(foodItem.getFiber());
         foodDto.setSugar(foodItem.getSugar());
         foodDto.setSodium(foodItem.getSodium());
-        foodDto.setFoodGroup(foodItem.getFoodGroup().name());
-        foodDto.setTags(String.join(",", foodItem.getTags()));
+        foodDto.setFoodGroup(foodItem.getFoodGroup() != null ? foodItem.getFoodGroup().name() : null);
+        foodDto.setTags(foodItem.getTags() != null ? String.join(",", foodItem.getTags()) : "");
         return foodDto;
     }
 }
