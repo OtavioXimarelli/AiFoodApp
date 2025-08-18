@@ -1,12 +1,7 @@
 package com.otavio.aifoodapp.controller;
 
-import com.otavio.aifoodapp.dto.RecipeDto;
-import com.otavio.aifoodapp.mapper.RecipeMapper;
-import com.otavio.aifoodapp.model.FoodItem;
-import com.otavio.aifoodapp.model.Recipe;
-import com.otavio.aifoodapp.service.FoodItemService;
-import com.otavio.aifoodapp.service.ChatService;
-import com.otavio.aifoodapp.service.RecipeService;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +9,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.otavio.aifoodapp.dto.RecipeDto;
+import com.otavio.aifoodapp.mapper.RecipeMapper;
+import com.otavio.aifoodapp.model.FoodItem;
+import com.otavio.aifoodapp.service.ChatService;
+import com.otavio.aifoodapp.service.FoodItemService;
+import com.otavio.aifoodapp.service.RecipeService;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/recipes")
@@ -28,13 +29,14 @@ public class RecipeController {
     private final FoodItemService foodItemService;
     private final ChatService chatService;
     private final RecipeService recipeService;
-    private final RecipeMapper recipeMapper;
+    // Removed unused field
+    // private final RecipeMapper recipeMapper;
 
     public RecipeController(FoodItemService foodItemService, ChatService chatService, RecipeService recipeService, RecipeMapper recipeMapper) {
         this.foodItemService = foodItemService;
         this.chatService = chatService;
         this.recipeService = recipeService;
-        this.recipeMapper = recipeMapper;
+        // recipeMapper is not used, so we don't need to assign it to a field
     }
 
     @GetMapping("/gen")
