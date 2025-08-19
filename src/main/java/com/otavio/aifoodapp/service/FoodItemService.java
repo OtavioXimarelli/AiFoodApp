@@ -73,9 +73,8 @@ public class FoodItemService {
         }
         
         // If the authentication principal is already a User, use that
-        // Using standard instanceof check to support older Java versions
-        if (authentication.getPrincipal() instanceof User) {
-            User user = (User) authentication.getPrincipal();
+        // Using pattern matching instanceof (Java 16+)
+        if (authentication.getPrincipal() instanceof User user) {
             log.debug("Principal is already a User: {}", user.getUsername());
             return user;
         }
@@ -131,14 +130,14 @@ public class FoodItemService {
         }
         
         // Try direct cast if principal is User
-        if (authentication.getPrincipal() instanceof User) {
-            return (User) authentication.getPrincipal();
+        if (authentication.getPrincipal() instanceof User user) {
+            return user;
         }
         
         // Try by login
         UserDetails userDetails = userRepository.findByLogin(authentication.getName());
-        if (userDetails instanceof User) {
-            return (User) userDetails;
+        if (userDetails instanceof User user) {
+            return user;
         }
         
         // Try to create a user on the fly from OAuth info if this is the first login
