@@ -3,7 +3,6 @@ package com.otavio.aifoodapp.controller;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SessionDebugController {
 
-    @Value("${app.frontend.url}")
-    private String frontendUrl;
+    // frontendUrl removido pois não era utilizado
     
     /**
      * Exibe informações sobre a sessão atual
