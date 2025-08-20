@@ -1,7 +1,5 @@
 package com.otavio.aifoodapp.security;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -103,9 +101,13 @@ public class SecurityConfig {
                 
                 // Configure OAuth2 login with persistent tokens
                 .oauth2Login(oauth2 -> oauth2
-                        // Usar APENAS o handler de sucesso personalizado, não definir defaultSuccessUrl 
-                        // para evitar conflito de redirecionamento
-                        .successHandler(oauth2LoginSuccessHandler)
+                        // Usar o handler composto para processamento completo de sucesso de autenticação
+                        .successHandler((request, response, authentication) -> {
+                            // Primeiro processa com o customAuthenticationSuccessHandler para adicionar cabeçalhos
+                            customAuthenticationSuccessHandler.onAuthenticationSuccess(request, response, authentication);
+                            // Depois processa com o oauth2LoginSuccessHandler para gerenciar o redirecionamento
+                            oauth2LoginSuccessHandler.onAuthenticationSuccess(request, response, authentication);
+                        })
                         .failureHandler((request, response, exception) -> {
                             // Log detalhado do erro para depuração
                             log.error("OAuth2 login failure: {}", exception.getMessage(), exception);
