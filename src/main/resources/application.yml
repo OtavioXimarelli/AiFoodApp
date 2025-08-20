@@ -33,7 +33,7 @@ spring:
       secure: ${COOKIE_SECURE:true}  # true in production
       http-only: true
       same-site: ${COOKIE_SAME_SITE:lax}  # 'lax' works best for OAuth2 flows, use 'strict' only if necessary
-      domain: ${COOKIE_DOMAIN:.aifoodapp.site}
+      domain: ${COOKIE_DOMAIN:aifoodapp.site}
       
   # Google OAuth2 Configuration
   security:
@@ -92,7 +92,7 @@ server:
         secure: ${COOKIE_SECURE:true}  # Set to true in production
         same-site: ${COOKIE_SAME_SITE:lax}  # 'lax' works best for OAuth2 flows
         max-age: 2592000  # 30 days in seconds
-        domain: ${COOKIE_DOMAIN:.aifoodapp.site}  # Production domain
+        domain: ${COOKIE_DOMAIN:aifoodapp.site}  # Production domain
       timeout: 2592000  # 30 days in seconds
       tracking-modes: cookie  # Use cookies for session tracking, not URL parameters
   forward-headers-strategy: native  # Use native container support for forwarded headers

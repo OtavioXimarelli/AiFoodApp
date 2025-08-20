@@ -55,7 +55,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                // Configure CORS with the specified source
+                // Reabilitar CORS com configuração corrigida
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 
                 // Temporarily disable CSRF for all requests to make debugging easier
@@ -65,9 +65,9 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jsonAuthenticationEntryPoint))
                 
-                // Configure session management
+                // Configure session management - ALWAYS create a session for all requests
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 
                 // Configure authorization rules
                 .authorizeHttpRequests(auth -> auth

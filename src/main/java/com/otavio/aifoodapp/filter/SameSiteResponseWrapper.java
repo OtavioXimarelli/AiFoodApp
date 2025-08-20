@@ -10,8 +10,8 @@ import jakarta.servlet.http.HttpServletResponseWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Wrapper para HttpServletResponse que intercepta os cabeçalhos Set-Cookie
- * e adiciona o atributo SameSite aos cookies.
+ * HttpServletResponse wrapper that intercepts Set-Cookie headers
+ * and adds the SameSite attribute to cookies.
  */
 @Slf4j
 public class SameSiteResponseWrapper extends HttpServletResponseWrapper {
@@ -19,79 +19,91 @@ public class SameSiteResponseWrapper extends HttpServletResponseWrapper {
     private final String sameSiteValue;
     private final String cookieDomain;
     private final Map<String, Collection<String>> headers = new HashMap<>();
+    private boolean secure = true; // Default to secure cookies
 
     public SameSiteResponseWrapper(HttpServletResponse response, String sameSiteValue, String cookieDomain) {
         super(response);
         this.sameSiteValue = sameSiteValue != null ? sameSiteValue : "lax";
         this.cookieDomain = cookieDomain;
     }
+    
+    /**
+     * Set whether cookies should be marked as Secure
+     * @param secure true to add the Secure attribute, false otherwise
+     */
+    public void setSecureCookies(boolean secure) {
+        this.secure = secure;
+        log.debug("Set secure cookies to: {}", secure);
+    }
 
     @Override
     public void addHeader(String name, String value) {
         if (name != null && name.equalsIgnoreCase("Set-Cookie") && value != null) {
-            // Modificar o cabeçalho do cookie para incluir o atributo SameSite
+            // Modify cookie header to include SameSite attribute
             value = addSameSiteAttribute(value);
+            log.debug("Modified cookie header: {}", value);
         }
         
-        // Armazenar o cabeçalho localmente
+        // Store header locally
         Collection<String> values = headers.computeIfAbsent(name, k -> new ArrayList<>());
         values.add(value);
         
-        // Passar o cabeçalho modificado para o response original
+        // Pass modified header to original response
         super.addHeader(name, value);
     }
 
     @Override
     public void setHeader(String name, String value) {
         if (name != null && name.equalsIgnoreCase("Set-Cookie") && value != null) {
-            // Modificar o cabeçalho do cookie para incluir o atributo SameSite
+            // Modify cookie header to include SameSite attribute
             value = addSameSiteAttribute(value);
+            log.debug("Modified cookie header: {}", value);
         }
         
-        // Armazenar o cabeçalho localmente
+        // Store header locally
         Collection<String> values = new ArrayList<>();
         values.add(value);
         headers.put(name, values);
         
-        // Passar o cabeçalho modificado para o response original
+        // Pass modified header to original response
         super.setHeader(name, value);
     }
 
     /**
-     * Adiciona o atributo SameSite ao cookie se ainda não estiver presente.
+     * Add the SameSite attribute to the cookie if not already present.
      * 
-     * @param cookieHeader O cabeçalho do cookie a ser modificado
-     * @return O cabeçalho do cookie modificado
+     * @param cookieHeader The cookie header to modify
+     * @return The modified cookie header
      */
     private String addSameSiteAttribute(String cookieHeader) {
         if (cookieHeader == null) {
             return null;
         }
         
-        // Se o SameSite já estiver presente, não modificar
+        // If SameSite is already present, don't modify
         if (cookieHeader.contains("SameSite=")) {
             return cookieHeader;
         }
         
-        // Se o Domain já estiver presente, não adicionar novamente
+        // Check if Domain is already present
         boolean hasDomain = cookieHeader.contains("Domain=");
         
         StringBuilder modifiedCookie = new StringBuilder(cookieHeader);
         
-        // Adicionar atributo Secure se não estiver presente
-        if (!cookieHeader.contains("Secure")) {
+        // Add Secure attribute if not present and secure is true
+        if (secure && !cookieHeader.contains("Secure")) {
             modifiedCookie.append("; Secure");
         }
         
-        // Adicionar atributo HttpOnly se não estiver presente
+        // Add HttpOnly attribute if not present
         if (!cookieHeader.contains("HttpOnly")) {
             modifiedCookie.append("; HttpOnly");
         }
         
-        // Adicionar atributo SameSite
+        // Add SameSite attribute
         modifiedCookie.append("; SameSite=").append(sameSiteValue);
         
-        // Adicionar atributo Domain se não estiver presente e cookieDomain for fornecido
+        // Add Domain attribute if not present and cookieDomain is provided
         if (!hasDomain && cookieDomain != null && !cookieDomain.isEmpty()) {
             modifiedCookie.append("; Domain=").append(cookieDomain);
         }

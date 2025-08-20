@@ -94,13 +94,19 @@ public class FoodItemService {
     
     /**
      * Public method for testing user authentication
-     * @return the authenticated user
+     * @return the authenticated user or null if user can't be determined safely
      */
     public User getUserForTesting() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null) {
                 log.warn("No authentication in context");
+                return null;
+            }
+            
+            // Additional null checks to prevent NullPointerException
+            if (authentication.getName() == null) {
+                log.warn("Authentication name is null");
                 return null;
             }
             
@@ -113,37 +119,55 @@ public class FoodItemService {
             return extractUserFromAuthentication(authentication);
         } catch (Exception e) {
             log.error("Error in getUserForTesting: {}", e.getMessage(), e);
-            throw e;
+            // Return null instead of propagating the exception
+            return null;
         }
     }
     
     /**
      * Extract user information from various authentication types
+     * with additional null checks to prevent NullPointerExceptions
      */
     private User extractUserFromAuthentication(Authentication authentication) {
         if (authentication == null) return null;
         
-        // Try by email first
-        Optional<User> userByEmail = userRepository.findByEmail(authentication.getName());
-        if (userByEmail.isPresent()) {
-            return userByEmail.get();
+        try {
+            String username = authentication.getName();
+            if (username == null) {
+                log.warn("Username is null in authentication");
+                return null;
+            }
+            
+            // Try by email first
+            Optional<User> userByEmail = userRepository.findByEmail(username);
+            if (userByEmail.isPresent()) {
+                return userByEmail.get();
+            }
+            
+            // Try direct cast if principal is User
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User user) {
+                return user;
+            }
+            
+            // Try by login
+            UserDetails userDetails = null;
+            try {
+                userDetails = userRepository.findByLogin(username);
+            } catch (Exception e) {
+                log.warn("Error finding user by login: {}", e.getMessage());
+            }
+            
+            if (userDetails instanceof User user) {
+                return user;
+            }
+            
+            log.debug("Could not find user with name: {}", username);
+            return null;
+        } catch (Exception e) {
+            log.error("Error in extractUserFromAuthentication: {}", e.getMessage());
+            return null;
         }
-        
-        // Try direct cast if principal is User
-        if (authentication.getPrincipal() instanceof User user) {
-            return user;
-        }
-        
-        // Try by login
-        UserDetails userDetails = userRepository.findByLogin(authentication.getName());
-        if (userDetails instanceof User user) {
-            return user;
-        }
-        
-        // Try to create a user on the fly from OAuth info if this is the first login
-        // This would require implementation if needed
-        
-        return null;
     }
 
     /**

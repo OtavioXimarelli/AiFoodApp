@@ -58,100 +58,134 @@ public class AuthController {
                 request.getHeader("Origin"), 
                 request.getHeader("Referer"));
 
-        // Obter ID da sessão ou IP se não houver sessão
-        HttpSession session = request.getSession(false);
-        String sessionId = session != null ? session.getId() : request.getRemoteAddr();
-        
-        // Verificar frequência de requisições para este endpoint
-        long now = System.currentTimeMillis();
-        Long lastCheck = lastStatusChecks.get(sessionId);
-        
-        // Se a última verificação foi muito recente, retornar 429 Too Many Requests
-        if (lastCheck != null && now - lastCheck < STATUS_CHECK_THROTTLE_MS) {
-            log.warn("Requisições muito frequentes para /api/auth/status de {}", sessionId);
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(Map.of("error", "Muitas requisições. Por favor, aguarde."));
-        }
-        
-        // Atualizar timestamp da última verificação
-        lastStatusChecks.put(sessionId, now);
-        
-        // Limitar tamanho do cache (remover entradas antigas com 1% de probabilidade)
-        if (lastStatusChecks.size() > 1000 && Math.random() < 0.01) {
-            cleanOldEntries();
-        }
-        
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        
-        // Debug session information
-        log.debug("Auth status check with session ID: {}", sessionId);
-        log.debug("Request URI: {}, Method: {}", request.getRequestURI(), request.getMethod());
-        log.debug("User-Agent: {}", request.getHeader("User-Agent"));
-        log.debug("Origin: {}", request.getHeader("Origin"));
-        log.debug("Referer: {}", request.getHeader("Referer"));
-        
-        // Verificar cookies para diagnóstico
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            log.debug("Nenhum cookie presente na requisição de status");
-        } else {
-            boolean foundJsessionId = false;
-            for (Cookie cookie : cookies) {
-                if ("JSESSIONID".equals(cookie.getName())) {
-                    foundJsessionId = true;
-                    log.debug("Cookie JSESSIONID encontrado: domain={}, path={}, maxAge={}, secure={}, httpOnly={}",
-                            cookie.getDomain() != null ? cookie.getDomain() : "default",
-                            cookie.getPath(),
-                            cookie.getMaxAge(),
-                            cookie.getSecure(),
-                            cookie.isHttpOnly());
-                }
-            }
-            if (!foundJsessionId) {
-                log.warn("Cookie JSESSIONID não encontrado na requisição de status");
-            }
-        }
-        
-        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-            log.info("User is authenticated as: {}", auth.getName());
+        try {
+            // Get session ID or IP if no session exists
+            HttpSession session = request.getSession(false);
+            String sessionId = session != null ? session.getId() : request.getRemoteAddr();
             
-            try {
-                // Criar sessão se não existir
-                if (session == null) {
-                    session = request.getSession(true);
-                    log.debug("Criada nova sessão para usuário autenticado: {}", session.getId());
+            // Check request frequency for this endpoint
+            long now = System.currentTimeMillis();
+            Long lastCheck = lastStatusChecks.get(sessionId);
+            
+            // If last check was too recent, return 429 Too Many Requests
+            if (lastCheck != null && now - lastCheck < STATUS_CHECK_THROTTLE_MS) {
+                log.warn("Too many requests to /api/auth/status from {}", sessionId);
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(Map.of("error", "Too many requests. Please wait."));
+            }
+            
+            // Update last check timestamp
+            lastStatusChecks.put(sessionId, now);
+            
+            // Limit cache size (remove old entries with 1% probability)
+            if (lastStatusChecks.size() > 1000 && Math.random() < 0.01) {
+                cleanOldEntries();
+            }
+            
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            
+            // Debug session information
+            log.debug("Auth status check with session ID: {}", sessionId);
+            log.debug("Request URI: {}, Method: {}", request.getRequestURI(), request.getMethod());
+            log.debug("User-Agent: {}", request.getHeader("User-Agent"));
+            log.debug("Origin: {}", request.getHeader("Origin"));
+            log.debug("Referer: {}", request.getHeader("Referer"));
+            
+            // Check cookies for diagnostics
+            Cookie[] cookies = request.getCookies();
+            if (cookies == null) {
+                log.debug("No cookies present in status request");
+            } else {
+                boolean foundJsessionId = false;
+                for (Cookie cookie : cookies) {
+                    if ("JSESSIONID".equals(cookie.getName())) {
+                        foundJsessionId = true;
+                        log.debug("JSESSIONID cookie found: domain={}, path={}, maxAge={}, secure={}, httpOnly={}",
+                                cookie.getDomain() != null ? cookie.getDomain() : "default",
+                                cookie.getPath(),
+                                cookie.getMaxAge(),
+                                cookie.getSecure(),
+                                cookie.isHttpOnly());
+                    }
                 }
+                if (!foundJsessionId) {
+                    log.warn("JSESSIONID cookie not found in status request");
+                }
+            }
+            
+            // Create session if it doesn't exist to ensure we have a valid session for all requests
+            if (session == null) {
+                session = request.getSession(true);
+                log.debug("Created new session for auth status check: {}", session.getId());
+            }
+            
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                log.info("User is authenticated as: {}", auth.getName());
                 
-                // Garantir que o contexto de segurança esteja na sessão
-                session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
-                
-                // Get current user info from service
-                User user = foodItemService.getUserForTesting();
-                if (user != null) {
-                    log.debug("Successfully retrieved user details for: {}", user.getEmail());
+                try {
+                    // Ensure security context is in session
+                    session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+                    
+                    // Get current user info from service
+                    User user = foodItemService.getUserForTesting();
+                    if (user != null) {
+                        log.debug("Successfully retrieved user details for: {}", user.getEmail());
+                        return ResponseEntity.ok(Map.of(
+                            "authenticated", true,
+                            "user", Map.of(
+                                "id", user.getId(),
+                                "name", user.getFirstName() != null && user.getLastName() != null ? 
+                                       user.getFirstName() + " " + user.getLastName() : user.getEmail(),
+                                "email", user.getEmail(),
+                                "picture", user.getProfilePicture() != null ? user.getProfilePicture() : ""
+                            ),
+                            "sessionId", session.getId(),
+                            "sessionCreatedAt", new java.util.Date(session.getCreationTime()).toString()
+                        ));
+                    } else {
+                        log.warn("User object is null for authenticated user: {}", auth.getName());
+                        return ResponseEntity.ok(Map.of(
+                            "authenticated", true,
+                            "sessionId", session.getId(),
+                            "error", "User details unavailable",
+                            "message", "Session is authenticated but user details cannot be retrieved"
+                        ));
+                    }
+                } catch (NullPointerException e) {
+                    log.error("NullPointerException in auth status check", e);
+                    // Return basic authentication info without user details
                     return ResponseEntity.ok(Map.of(
                         "authenticated", true,
-                        "user", Map.of(
-                            "id", user.getId(),
-                            "name", user.getFirstName() + " " + user.getLastName(),
-                            "email", user.getEmail(),
-                            "picture", user.getProfilePicture() != null ? user.getProfilePicture() : ""
-                        ),
                         "sessionId", session.getId(),
-                        "sessionCreatedAt", new java.util.Date(session.getCreationTime()).toString()
+                        "error", "User details unavailable",
+                        "message", "Session is authenticated but user details cannot be retrieved"
+                    ));
+                } catch (Exception e) {
+                    log.error("Error getting user details: {}", e.getMessage(), e);
+                    return ResponseEntity.ok(Map.of(
+                        "authenticated", true,
+                        "sessionId", session.getId(),
+                        "error", "Error fetching user details",
+                        "message", e.getMessage()
                     ));
                 }
-            } catch (Exception e) {
-                log.error("Error getting user details", e);
+            } else {
+                log.debug("User is not authenticated. Auth: {}", auth);
             }
-        } else {
-            log.debug("User is not authenticated. Auth: {}", auth);
+            
+            return ResponseEntity.ok(Map.of(
+                "authenticated", false,
+                "sessionId", sessionId
+            ));
+        } catch (Exception e) {
+            log.error("Unexpected error in auth status endpoint", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                    "error", "Internal server error",
+                    "message", e.getMessage(),
+                    "path", request.getRequestURI()
+                ));
         }
-        
-        return ResponseEntity.ok(Map.of(
-            "authenticated", false,
-            "sessionId", sessionId
-        ));
     }
     
     /**
