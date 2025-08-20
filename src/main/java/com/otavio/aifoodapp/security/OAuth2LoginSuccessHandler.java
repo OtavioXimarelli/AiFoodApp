@@ -6,9 +6,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -136,7 +137,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 response.flushBuffer();
                 
                 log.info("Successfully redirected after OAuth2 login");
-            } catch (Exception e) {
+            } catch (IOException | IllegalStateException e) {
                 log.error("Error during redirect: {}", e.getMessage(), e);
                 // Tentar uma abordagem alternativa em caso de erro - JavaScript redirect
                 try {
@@ -145,7 +146,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     response.getWriter().write("<html><head><script>window.location.href='" + redirectUrl + 
                                           "';</script></head><body>Redirecting to dashboard...</body></html>");
                     response.flushBuffer();
-                } catch (Exception ex) {
+                } catch (IOException | IllegalStateException ex) {
                     log.error("Failed even with JavaScript redirect: {}", ex.getMessage());
                 }
             }
@@ -163,7 +164,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 response.setStatus(HttpServletResponse.SC_FOUND);
                 response.setHeader("Location", redirectUrl);
                 response.flushBuffer();
-            } catch (Exception ex) {
+            } catch (IOException | IllegalStateException ex) {
                 log.error("Failed to redirect even in emergency fallback handler: {}", ex.getMessage(), ex);
                 
                 // Last resort - try to send plain text
@@ -172,7 +173,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.getWriter().write("Authentication successful. Please navigate to " + frontendUrl + "/dashboard manually.");
                     response.flushBuffer();
-                } catch (Exception ignored) {
+                } catch (IOException ignored) {
                     // Nothing more we can do
                 }
             }
@@ -263,7 +264,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             User savedUser = userRepository.save(newUser);
             log.info("Successfully created new user: {}", email);
             return savedUser;
-        } catch (Exception e) {
+        } catch (DataAccessException | IllegalArgumentException e) {
             log.error("Failed to create new user from OAuth2 data: {}", e.getMessage(), e);
             throw e; // Re-throw as this is critical
         }
