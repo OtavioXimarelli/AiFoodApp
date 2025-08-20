@@ -122,13 +122,14 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
 
     private String serializeObject(Object object) {
         try {
-            // Usando ByteArrayOutputStream e ObjectOutputStream diretamente para evitar método obsoleto
+            // Usando ByteArrayOutputStream e ObjectOutputStream com try-with-resources
             java.io.ByteArrayOutputStream byteStream = new java.io.ByteArrayOutputStream();
-            java.io.ObjectOutputStream objectStream = new java.io.ObjectOutputStream(byteStream);
-            objectStream.writeObject(object);
-            objectStream.flush();
-            return Base64.getUrlEncoder().encodeToString(byteStream.toByteArray());
-        } catch (Exception e) {
+            try (java.io.ObjectOutputStream objectStream = new java.io.ObjectOutputStream(byteStream)) {
+                objectStream.writeObject(object);
+                objectStream.flush();
+                return Base64.getUrlEncoder().encodeToString(byteStream.toByteArray());
+            }
+        } catch (java.io.IOException e) {
             log.error("Erro ao serializar objeto para cookie: {}", e.getMessage());
             return null;
         }
@@ -137,15 +138,21 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
     @SuppressWarnings("unchecked")
     private <T> T deserializeObject(String value) {
         try {
-            // Usando ByteArrayInputStream e ObjectInputStream diretamente para evitar método obsoleto
+            // Usando ByteArrayInputStream e ObjectInputStream com try-with-resources
             byte[] bytes = Base64.getUrlDecoder().decode(value);
             java.io.ByteArrayInputStream byteStream = new java.io.ByteArrayInputStream(bytes);
-            java.io.ObjectInputStream objectStream = new java.io.ObjectInputStream(byteStream);
-            Object object = objectStream.readObject();
-            objectStream.close();
-            return (T) object;
-        } catch (Exception e) {
-            log.error("Erro ao deserializar objeto do cookie: {}", e.getMessage());
+            try (java.io.ObjectInputStream objectStream = new java.io.ObjectInputStream(byteStream)) {
+                Object object = objectStream.readObject();
+                return (T) object;
+            }
+        } catch (java.io.IOException e) {
+            log.error("Erro ao deserializar objeto do cookie (IO): {}", e.getMessage());
+            return null;
+        } catch (ClassNotFoundException e) {
+            log.error("Erro ao deserializar objeto do cookie (Classe não encontrada): {}", e.getMessage());
+            return null;
+        } catch (ClassCastException e) {
+            log.error("Erro ao deserializar objeto do cookie (Cast inválido): {}", e.getMessage());
             return null;
         }
     }
