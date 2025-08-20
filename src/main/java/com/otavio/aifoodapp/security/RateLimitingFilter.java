@@ -9,7 +9,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
@@ -21,9 +20,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,8 +74,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
     }
 
-    @Value("${app.frontend.url:http://localhost:8082}")
-    private String frontendUrl;
+    // frontendUrl removido pois não era utilizado
 
     // Lista de caminhos que devem ser ignorados pelo rate limiting
     private static final List<String> EXEMPT_PATHS = Arrays.asList(
