@@ -26,11 +26,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up JDK 21
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '17'
 
     - name: Cache Maven packages
       uses: actions/cache@v4
@@ -41,6 +41,7 @@ jobs:
           ${{ runner.os }}-maven-
 
     - name: Build with Maven
+      id: maven
       run: mvn -B package --file pom.xml
 
     - name: Upload Surefire test reports
@@ -157,4 +158,4 @@ jobs:
             </div>
           </body>
           </html>
-        attachments: target/surefire-reports/*.xml
+        attachments: target/surefire-reports/*.xml,target/surefire-reports/*.txt
