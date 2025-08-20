@@ -1,8 +1,8 @@
 package com.otavio.aifoodapp.security;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -100,7 +100,13 @@ public class AuthenticationDiagnosticsFilter extends OncePerRequestFilter {
                       .append("Autoridades: ").append(auth.getAuthorities()).append("\n");
             
             Object principal = auth.getPrincipal();
-            logBuilder.append("Principal: ").append(principal instanceof String ? principal : principal.getClass().getSimpleName()).append("\n");
+            if (principal instanceof String str) {
+                logBuilder.append("Principal: ").append(str).append("\n");
+            } else if (principal != null) {
+                logBuilder.append("Principal: ").append(principal.getClass().getSimpleName()).append("\n");
+            } else {
+                logBuilder.append("Principal: null\n");
+            }
         } else {
             logBuilder.append("Autenticação: NENHUMA\n");
         }
