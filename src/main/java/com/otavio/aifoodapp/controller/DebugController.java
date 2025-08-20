@@ -1,10 +1,10 @@
 package com.otavio.aifoodapp.controller;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controlador para fins de depuração de autenticação
@@ -116,13 +116,18 @@ public class DebugController {
                     .collect(Collectors.toList()));
             authInfo.put("authType", auth.getClass().getSimpleName());
             
-            // Informações específicas do OAuth2
-            if (auth instanceof OAuth2AuthenticationToken) {
-                OAuth2AuthenticationToken oauth2Auth = (OAuth2AuthenticationToken) auth;
+            // Extrair informações do usuário para log e depuração
+            if (auth instanceof OAuth2AuthenticationToken oauth2Auth) {
+                OAuth2User oauth2User = oauth2Auth.getPrincipal();
+                Map<String, Object> attributes = oauth2User.getAttributes();
+                
+                String email = (String) attributes.get("email");
+                String name = (String) attributes.get("name");
+                log.info("Usuário OAuth2 autenticado: {} ({})", name, email);
+                
                 Map<String, Object> oauth2Info = new HashMap<>();
                 oauth2Info.put("registrationId", oauth2Auth.getAuthorizedClientRegistrationId());
                 
-                OAuth2User oauth2User = oauth2Auth.getPrincipal();
                 Map<String, Object> userAttributes = new HashMap<>();
                 for (String key : oauth2User.getAttributes().keySet()) {
                     if (key.equalsIgnoreCase("email") || key.equalsIgnoreCase("name")) {
@@ -132,6 +137,8 @@ public class DebugController {
                     }
                 }
                 oauth2Info.put("userAttributes", userAttributes);
+                
+                authInfo.put("oauth2", oauth2Info);
                 
                 authInfo.put("oauth2", oauth2Info);
             }
