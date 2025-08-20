@@ -63,8 +63,21 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(maxAge);
-        cookie.setSecure(false); // Definir como true em ambiente de produção
-        response.addCookie(cookie);
+        cookie.setSecure(true); // Sempre usar Secure em produção
+        
+        // O atributo SameSite será adicionado pelo SameSiteCookieFilter
+        // mas também podemos adicioná-lo diretamente aqui via header
+        String cookieValue = String.format("%s=%s; Path=%s; Max-Age=%d; HttpOnly; Secure; SameSite=Lax", 
+                name, value, cookie.getPath(), cookie.getMaxAge());
+        
+        if (System.getenv("COOKIE_DOMAIN") != null) {
+            String domain = System.getenv("COOKIE_DOMAIN");
+            cookieValue += "; Domain=" + domain;
+            cookie.setDomain(domain);
+        }
+        
+        response.addHeader("Set-Cookie", cookieValue);
+        response.addCookie(cookie); // Adicionamos o cookie também pelo método padrão
     }
 
     private void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
@@ -75,6 +88,19 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
                     cookie.setValue("");
                     cookie.setPath("/");
                     cookie.setMaxAge(0);
+                    cookie.setSecure(true);
+                    
+                    // Adicionar também via header para garantir que os atributos SameSite sejam incluídos
+                    String cookieValue = String.format("%s=; Path=%s; Max-Age=0; HttpOnly; Secure; SameSite=Lax", 
+                            name, cookie.getPath());
+                    
+                    if (System.getenv("COOKIE_DOMAIN") != null) {
+                        String domain = System.getenv("COOKIE_DOMAIN");
+                        cookieValue += "; Domain=" + domain;
+                        cookie.setDomain(domain);
+                    }
+                    
+                    response.addHeader("Set-Cookie", cookieValue);
                     response.addCookie(cookie);
                     break;
                 }

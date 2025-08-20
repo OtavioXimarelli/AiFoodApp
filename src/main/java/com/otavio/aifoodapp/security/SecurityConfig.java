@@ -2,7 +2,7 @@ package com.otavio.aifoodapp.security;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +16,9 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.otavio.aifoodapp.filter.SameSiteCookieFilter;
 
 import jakarta.servlet.DispatcherType;
 import lombok.extern.slf4j.Slf4j;
@@ -34,20 +34,28 @@ public class SecurityConfig {
     
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
     private final TokenRefreshFilter tokenRefreshFilter;
-
     private final JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final SameSiteCookieFilter sameSiteCookieFilter;
+    
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
     
     public SecurityConfig(
             OAuth2LoginSuccessHandler oauth2LoginSuccessHandler,
             TokenRefreshFilter tokenRefreshFilter,
-            JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint) {
+            JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint,
+            CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
+            SameSiteCookieFilter sameSiteCookieFilter) {
         this.oauth2LoginSuccessHandler = oauth2LoginSuccessHandler;
         this.tokenRefreshFilter = tokenRefreshFilter;
         this.jsonAuthenticationEntryPoint = jsonAuthenticationEntryPoint;
+        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
+        this.sameSiteCookieFilter = sameSiteCookieFilter;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, @Qualifier("configurationSource") CorsConfigurationSource corsConfigurationSource) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 // Configure CORS with the specified source
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -124,47 +132,14 @@ public class SecurityConfig {
                 )
                 // Add token refresh filter
                 .addFilterBefore(tokenRefreshFilter, UsernamePasswordAuthenticationFilter.class)
+                // Add SameSiteCookieFilter to set SameSite attribute for all cookies
+                .addFilterBefore(sameSiteCookieFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
 
 
     }
 
-    @Bean
-    public CorsConfigurationSource configurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        // Lista específica de origens permitidas
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:8080",
-            "http://localhost:3000",
-            "http://localhost:8082", 
-            "http://localhost:5173",
-            "http://192.168.5.19:8082", 
-            "https://www.aifoodapp.site", 
-            "https://aifoodapp.site"
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization", 
-            "Content-Type", 
-            "X-Requested-With", 
-            "Accept", 
-            "Origin", 
-            "X-XSRF-TOKEN",
-            "X-CSRF-TOKEN",
-            "X-Auth-Success"
-        ));
-        configuration.setExposedHeaders(Arrays.asList("X-XSRF-TOKEN", "X-Auth-Success"));
-        // Habilitar credenciais para permitir cookies em requisições cross-origin
-        configuration.setAllowCredentials(true);
-        // Permitir CORS para login e OAuth endpoints
-        configuration.addAllowedOriginPattern("*"); // Mais permissivo para depuração
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
-    }
+    // O Bean CorsConfigurationSource foi movido para CorsConfig
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
