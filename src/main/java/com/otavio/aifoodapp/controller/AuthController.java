@@ -50,6 +50,14 @@ public class AuthController {
     
     @GetMapping("/status")
     public ResponseEntity<?> authStatus(HttpServletRequest request) {
+        log.info("=== AUTH STATUS CHECK ===");
+        log.info("Request URI: {}, Method: {}", request.getRequestURI(), request.getMethod());
+        log.info("Remote IP: {}, User-Agent: {}", request.getRemoteAddr(), request.getHeader("User-Agent"));
+        log.info("Host: {}, Origin: {}, Referer: {}", 
+                request.getHeader("Host"), 
+                request.getHeader("Origin"), 
+                request.getHeader("Referer"));
+
         // Obter ID da sessão ou IP se não houver sessão
         HttpSession session = request.getSession(false);
         String sessionId = session != null ? session.getId() : request.getRemoteAddr();

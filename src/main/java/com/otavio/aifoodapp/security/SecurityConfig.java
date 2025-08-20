@@ -77,6 +77,9 @@ public class SecurityConfig {
                         // Allow error endpoint
                         .requestMatchers("/error").permitAll()
                         
+                        // Allow health check endpoint
+                        .requestMatchers("/health").permitAll()
+                        
                         // Allow test authentication endpoints for debugging
                         .requestMatchers("/api/foods/test-auth").permitAll()
                         

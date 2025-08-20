@@ -1,7 +1,7 @@
 package com.otavio.aifoodapp.controller;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -36,6 +36,8 @@ public class UserInfoController {
     @GetMapping("/auth")
     public ResponseEntity<?> getUserInfo() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        
+        log.info("GET /api/auth - Authentication: {}", auth != null ? auth.getName() : "null");
         
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
             log.debug("Fornecendo informações para usuário autenticado: {}", auth.getName());
@@ -72,9 +74,12 @@ public class UserInfoController {
             }
         }
         
-        log.debug("Tentativa de acesso a /api/auth sem autenticação");
-        return ResponseEntity.status(401).body(Map.of(
-            "error", "unauthorized",
+        log.info("Tentativa de acesso a /api/auth sem autenticação (auth: {})", 
+                auth != null ? auth.getClass().getSimpleName() : "null");
+                
+        // Return 200 with authenticated: false instead of 401 to avoid browser issues
+        return ResponseEntity.ok(Map.of(
+            "error", "not_authenticated",
             "authenticated", false,
             "message", "Usuário não autenticado"
         ));
