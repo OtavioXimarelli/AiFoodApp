@@ -63,9 +63,9 @@ public class SessionInfoController {
             authInfo.put("authorities", auth.getAuthorities().toString());
             
             // Informações específicas do OAuth2
-            if (auth instanceof OAuth2AuthenticationToken) {
+            if (auth instanceof OAuth2AuthenticationToken oauth2Auth) {
                 authInfo.put("type", "OAuth2");
-                authInfo.put("clientRegistrationId", ((OAuth2AuthenticationToken) auth).getAuthorizedClientRegistrationId());
+                authInfo.put("clientRegistrationId", oauth2Auth.getAuthorizedClientRegistrationId());
             }
             
             info.put("authentication", authInfo);
