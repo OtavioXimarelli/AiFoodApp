@@ -40,20 +40,9 @@ public class SameSiteCookieFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
             throws IOException, ServletException {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        
-        // Debug request info
-        if (httpRequest.getRequestURI().contains("/auth/status")) {
-            log.debug("Processing auth status request");
-            log.debug("Request URI: {}, Origin: {}, Referer: {}", 
-                    httpRequest.getRequestURI(),
-                    httpRequest.getHeader("Origin"),
-                    httpRequest.getHeader("Referer"));
-        }
         
         // Custom wrapper to intercept cookies and add the SameSite attribute
         SameSiteResponseWrapper wrappedResponse = new SameSiteResponseWrapper(httpResponse, sameSite, cookieDomain);
-        // Pass secure setting to the wrapper
         wrappedResponse.setSecureCookies(secure);
         
         try {
@@ -70,9 +59,6 @@ public class SameSiteCookieFilter implements Filter {
                         
                         // Add modified cookie headers
                         for (String cookieHeader : cookieHeaders) {
-                            if (httpRequest.getRequestURI().contains("/auth/status")) {
-                                log.debug("Setting cookie: {}", cookieHeader);
-                            }
                             httpResponse.addHeader(header, cookieHeader);
                         }
                     }

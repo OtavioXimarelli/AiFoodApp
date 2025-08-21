@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -23,10 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controlador para fins de depuração de autenticação
- * ATENÇÃO: Este controlador deve ser desativado ou protegido em ambientes de produção
+ * ATENÇÃO: Este controlador só é ativo quando app.debug.enabled=true
  */
 @RestController
 @RequestMapping("/api/debug")
+@ConditionalOnProperty(name = "app.debug.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class DebugController {
 
@@ -137,9 +139,6 @@ public class DebugController {
                     }
                 }
                 oauth2Info.put("userAttributes", userAttributes);
-                
-                authInfo.put("oauth2", oauth2Info);
-                
                 authInfo.put("oauth2", oauth2Info);
             }
             

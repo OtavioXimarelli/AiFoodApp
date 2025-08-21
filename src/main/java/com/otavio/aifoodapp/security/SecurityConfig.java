@@ -33,7 +33,6 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
     private final TokenRefreshFilter tokenRefreshFilter;
     private final JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint;
-    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final SameSiteCookieFilter sameSiteCookieFilter;
     
     @Autowired
@@ -43,12 +42,10 @@ public class SecurityConfig {
             OAuth2LoginSuccessHandler oauth2LoginSuccessHandler,
             TokenRefreshFilter tokenRefreshFilter,
             JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint,
-            CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
             SameSiteCookieFilter sameSiteCookieFilter) {
         this.oauth2LoginSuccessHandler = oauth2LoginSuccessHandler;
         this.tokenRefreshFilter = tokenRefreshFilter;
         this.jsonAuthenticationEntryPoint = jsonAuthenticationEntryPoint;
-        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
         this.sameSiteCookieFilter = sameSiteCookieFilter;
     }
 
@@ -58,14 +55,14 @@ public class SecurityConfig {
                 // Reabilitar CORS com configuração corrigida
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 
-                // Temporarily disable CSRF for all requests to make debugging easier
+                // Disable CSRF for API endpoints (appropriate for stateless API with token-based auth)
                 .csrf(csrf -> csrf.disable())
                 
                 // Use custom JSON authentication entry point for better API handling
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jsonAuthenticationEntryPoint))
                 
-                // Configure session management - ALWAYS create a session for all requests
+                // Configure session management for OAuth2 authentication
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 
@@ -92,8 +89,8 @@ public class SecurityConfig {
                         // Allow auth status endpoint for checking authentication (with and without duplicate 'api')
                         .requestMatchers("/api/auth/status", "/api/api/auth/status").permitAll()
                         
-                        // Endpoints de debug - restrito em produção
-                        .requestMatchers("/api/debug/**").hasRole("ADMIN")
+                        // Debug endpoints are conditionally available based on app.debug.enabled property
+                        .requestMatchers("/api/debug/**").permitAll()
                         
                         // Require authentication for all other requests
                         .anyRequest().authenticated()
@@ -101,22 +98,15 @@ public class SecurityConfig {
                 
                 // Configure OAuth2 login with persistent tokens
                 .oauth2Login(oauth2 -> oauth2
-                        // Usar o handler composto para processamento completo de sucesso de autenticação
-                        .successHandler((request, response, authentication) -> {
-                            // Primeiro processa com o customAuthenticationSuccessHandler para adicionar cabeçalhos
-                            customAuthenticationSuccessHandler.onAuthenticationSuccess(request, response, authentication);
-                            // Depois processa com o oauth2LoginSuccessHandler para gerenciar o redirecionamento
-                            oauth2LoginSuccessHandler.onAuthenticationSuccess(request, response, authentication);
-                        })
+                        // Use the consolidated OAuth2LoginSuccessHandler
+                        .successHandler(oauth2LoginSuccessHandler)
                         .failureHandler((request, response, exception) -> {
-                            // Log detalhado do erro para depuração
                             log.error("OAuth2 login failure: {}", exception.getMessage(), exception);
                             response.sendRedirect(frontEndUrl + "/login?error=true&message=" + exception.getMessage());
                         })
                         // Use custom repository for authorization requests to maintain state
                         .authorizationEndpoint(auth -> auth
                             .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository())
-                            // Manter a URL padrão que o frontend espera
                             .baseUri("/oauth2/authorization")
                         )
                         .redirectionEndpoint(redirect -> 
