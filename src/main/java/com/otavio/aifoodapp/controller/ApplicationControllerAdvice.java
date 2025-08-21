@@ -1,4 +1,4 @@
-package com.otavio.aifoodapp.config;
+package com.otavio.aifoodapp.controller;
 
 
 import com.otavio.aifoodapp.exception.UsernameOrPasswordInvalidExcpetion;

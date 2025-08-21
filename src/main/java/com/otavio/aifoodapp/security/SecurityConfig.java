@@ -2,8 +2,10 @@ package com.otavio.aifoodapp.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -14,6 +16,8 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.otavio.aifoodapp.filter.SameSiteCookieFilter;
@@ -29,6 +33,15 @@ public class SecurityConfig {
 
     @Value("${app.frontend.url}")
     private String frontEndUrl;
+    
+    @Value("${COOKIE_SECURE:true}")
+    private boolean cookieSecure;
+    
+    @Value("${COOKIE_SAME_SITE:lax}")
+    private String cookieSameSite;
+    
+    @Value("${COOKIE_DOMAIN:aifoodapp.site}")
+    private String cookieDomain;
     
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
     private final TokenRefreshFilter tokenRefreshFilter;
@@ -86,8 +99,8 @@ public class SecurityConfig {
                         // Allow test authentication endpoints for debugging
                         .requestMatchers("/api/foods/test-auth").permitAll()
                         
-                        // Allow auth status endpoint for checking authentication (with and without duplicate 'api')
-                        .requestMatchers("/api/auth/status", "/api/api/auth/status").permitAll()
+                        // Allow auth status endpoint for checking authentication
+                        .requestMatchers("/api/auth/status").permitAll()
                         
                         // Debug endpoints are conditionally available based on app.debug.enabled property
                         .requestMatchers("/api/debug/**").permitAll()
@@ -142,6 +155,52 @@ public class SecurityConfig {
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> httpCookieOAuth2AuthorizationRequestRepository() {
         // Usar nosso repositório personalizado baseado em cookies para maior robustez
         return new HttpCookieOAuth2AuthorizationRequestRepository();
+    }
+
+    /**
+     * Configure cookie serializer for Spring Session
+     */
+    @Bean
+    @Primary
+    public CookieSerializer cookieSerializer() {
+        DefaultCookieSerializer serializer = new DefaultCookieSerializer();
+        
+        log.info("Configuring session cookies with secure={}, sameSite={}, domain={}",
+                cookieSecure, cookieSameSite, cookieDomain);
+        
+        // Set secure flag based on environment
+        serializer.setUseSecureCookie(cookieSecure);
+        
+        // Set cookie name
+        serializer.setCookieName("JSESSIONID");
+        
+        // Set domain to ensure cookies work across subdomains
+        serializer.setDomainName(cookieDomain);
+        
+        // Set cookie path to root to be accessible from all paths
+        serializer.setCookiePath("/");
+        
+        // Set SameSite attribute
+        serializer.setSameSite(cookieSameSite);
+        
+        // Configure session cookie for maximum browser compatibility
+        serializer.setUseHttpOnlyCookie(true);
+        
+        return serializer;
+    }
+    
+    /**
+     * Configure SameSite attribute for all cookies
+     */
+    @Bean
+    public CookieSameSiteSupplier applicationCookieSameSiteSupplier() {
+        if ("none".equalsIgnoreCase(cookieSameSite)) {
+            return CookieSameSiteSupplier.ofNone();
+        } else if ("strict".equalsIgnoreCase(cookieSameSite)) {
+            return CookieSameSiteSupplier.ofStrict();
+        } else {
+            return CookieSameSiteSupplier.ofLax();
+        }
     }
 
 }

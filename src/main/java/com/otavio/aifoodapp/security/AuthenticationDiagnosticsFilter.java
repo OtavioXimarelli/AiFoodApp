@@ -27,17 +27,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  */
 @Component
 @ConditionalOnProperty(name = "app.debug.enabled", havingValue = "true", matchIfMissing = false)
-@Order(Ordered.HIGHEST_PRECEDENCE + 2) // Executar após RateLimitingFilter e ApiPathFixFilter
+@Order(Ordered.HIGHEST_PRECEDENCE + 2) // Executar após RateLimitingFilter
 @Slf4j
 public class AuthenticationDiagnosticsFilter extends OncePerRequestFilter {
 
     private static final List<String> IMPORTANT_PATHS = Arrays.asList(
         "/api/auth",
-        "/api/api/auth",
         "/api/auth/status",
-        "/api/api/auth/status",
         "/api/user",
-        "/api/api/user",
         "/login",
         "/oauth2"
     );

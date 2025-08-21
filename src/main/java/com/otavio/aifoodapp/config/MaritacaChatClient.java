@@ -44,7 +44,7 @@ public class MaritacaChatClient implements ChatClient {
     private String model;
 
     public MaritacaChatClient(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.build();
+        this.webClient = webClientBuilder.baseUrl(apiUrl).build();
     }
 
     public Mono<ChatResponse> call(Prompt prompt) {
