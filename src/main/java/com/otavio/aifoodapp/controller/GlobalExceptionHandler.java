@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.otavio.aifoodapp.exception.UsernameOrPasswordInvalidExcpetion;
+import com.otavio.aifoodapp.exception.UsernameOrPasswordInvalidException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,9 +47,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     /**
      * Tratar exceções de usuário/senha inválidos
      */
-    @ExceptionHandler(UsernameOrPasswordInvalidExcpetion.class)
+    @ExceptionHandler(UsernameOrPasswordInvalidException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ResponseEntity<Map<String, Object>> handleUsernameOrPasswordInvalidException(UsernameOrPasswordInvalidExcpetion ex, WebRequest request) {
+    public ResponseEntity<Map<String, Object>> handleUsernameOrPasswordInvalidException(UsernameOrPasswordInvalidException ex, WebRequest request) {
         log.warn("Invalid credentials: {}", ex.getMessage());
         
         return ResponseEntity
@@ -65,19 +65,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     /**
      * Tratar exceções de validação de argumentos
      */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<Map<String, Object>> handleArgumentNotValidException(MethodArgumentNotValidException ex, WebRequest request) {
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, org.springframework.http.HttpHeaders headers, org.springframework.http.HttpStatusCode status, WebRequest request) {
         log.warn("Validation failed: {}", ex.getMessage());
-        
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             FieldError fieldError = (FieldError) error;
             fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         });
-
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(org.springframework.http.HttpStatus.BAD_REQUEST)
                 .body(Map.of(
                     "error", "validation_failed",
                     "message", "Request validation failed",

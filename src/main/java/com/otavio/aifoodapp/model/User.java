@@ -102,4 +102,29 @@ public class User implements UserDetails {
         // Only return false if isActive is explicitly set to false
         return isActive == null || Boolean.TRUE.equals(isActive);
     }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
 }

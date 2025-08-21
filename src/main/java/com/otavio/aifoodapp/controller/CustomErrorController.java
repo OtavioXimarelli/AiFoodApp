@@ -43,6 +43,14 @@ public class CustomErrorController implements ErrorController {
         
         log.error("Error occurred: {} - {}, Path: {}", statusCode, errorMsg, path);
         
+        // Always log stacktrace if exception is present
+        if (exception != null && exception instanceof Throwable) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            ((Throwable) exception).printStackTrace(pw);
+            log.error("Exception stacktrace:\n{}", sw.toString());
+        }
+
         // Verificar se a requisição está relacionada ao OAuth2
         if (path != null && 
             (path.contains("/oauth2/") || 
