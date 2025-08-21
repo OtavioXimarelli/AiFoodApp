@@ -1,20 +1,18 @@
 package com.otavio.aifoodapp.controller;
 
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.otavio.aifoodapp.util.DebugInfoExtractor;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +21,8 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Controlador para fins de depuração de autenticação
+ * Controlador consolidado para diagnóstico e depuração
+ * Combina funcionalidades de debug de autenticação, sessão e cookies
  * ATENÇÃO: Este controlador só é ativo quando app.debug.enabled=true
  */
 @RestController
@@ -36,139 +35,135 @@ public class DebugController {
     private String frontendUrl;
 
     /**
-     * Endpoint para depurar informações de autenticação
+     * Endpoint principal para depuração - informações completas
+     */
+    @GetMapping("/info")
+    public Map<String, Object> getCompleteDebugInfo(HttpServletRequest request) {
+        log.info("Complete debug info requested by {}", request.getRemoteAddr());
+        
+        Map<String, Object> debugInfo = DebugInfoExtractor.extractCompleteDebugInfo(request);
+        debugInfo.put("frontendUrl", frontendUrl);
+        
+        return debugInfo;
+    }
+
+    /**
+     * Endpoint específico para informações de autenticação (compatibilidade)
      */
     @GetMapping("/auth-info")
     public Map<String, Object> getAuthInfo(HttpServletRequest request, HttpServletResponse response) {
+        log.info("Authentication debug info requested by {}", request.getRemoteAddr());
+        
         Map<String, Object> info = new HashMap<>();
         
-        // Informações básicas
-        info.put("remoteAddress", request.getRemoteAddr());
-        info.put("remoteHost", request.getRemoteHost());
-        info.put("serverName", request.getServerName());
-        info.put("serverPort", request.getServerPort());
-        info.put("scheme", request.getScheme());
-        info.put("requestURL", request.getRequestURL().toString());
+        // Informações básicas da requisição
+        info.putAll(DebugInfoExtractor.extractBasicRequestInfo(request));
         info.put("frontendUrl", frontendUrl);
-
-        // Headers
-        Map<String, String> headers = new HashMap<>();
-        Enumeration<String> headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            headers.put(headerName, request.getHeader(headerName));
-        }
-        info.put("headers", headers);
-
-        // Cookies
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            Map<String, Map<String, Object>> cookieDetails = Arrays.stream(cookies)
-                    .collect(Collectors.toMap(
-                            Cookie::getName,
-                            cookie -> {
-                                Map<String, Object> details = new HashMap<>();
-                                details.put("value", "[MASKED]"); // Não exibir valores por segurança
-                                details.put("domain", cookie.getDomain() != null ? cookie.getDomain() : "null");
-                                details.put("path", cookie.getPath());
-                                details.put("maxAge", cookie.getMaxAge());
-                                details.put("secure", cookie.getSecure());
-                                details.put("httpOnly", cookie.isHttpOnly());
-                                return details;
-                            }
-                    ));
-            info.put("cookies", cookieDetails);
-        } else {
-            info.put("cookies", "No cookies found");
-        }
-
-        // Informações de Sessão
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            Map<String, Object> sessionInfo = new HashMap<>();
-            sessionInfo.put("id", session.getId());
-            sessionInfo.put("creationTime", session.getCreationTime());
-            sessionInfo.put("lastAccessedTime", session.getLastAccessedTime());
-            sessionInfo.put("maxInactiveInterval", session.getMaxInactiveInterval());
-            sessionInfo.put("isNew", session.isNew());
-
-            // Atributos da sessão (apenas nomes, sem valores por segurança)
-            Enumeration<String> attributeNames = session.getAttributeNames();
-            Map<String, String> attributes = new HashMap<>();
-            while (attributeNames.hasMoreElements()) {
-                String name = attributeNames.nextElement();
-                attributes.put(name, "[MASKED]");
-            }
-            sessionInfo.put("attributes", attributes);
-            
-            info.put("session", sessionInfo);
-        } else {
-            info.put("session", "No active session");
-        }
-
-        // Informações de Autenticação
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            Map<String, Object> authInfo = new HashMap<>();
-            authInfo.put("name", auth.getName());
-            authInfo.put("authenticated", auth.isAuthenticated());
-            authInfo.put("principal", auth.getPrincipal().toString());
-            authInfo.put("authorities", auth.getAuthorities().stream()
-                    .map(Object::toString)
-                    .collect(Collectors.toList()));
-            authInfo.put("authType", auth.getClass().getSimpleName());
-            
-            // Extrair informações do usuário para log e depuração
-            if (auth instanceof OAuth2AuthenticationToken oauth2Auth) {
-                OAuth2User oauth2User = oauth2Auth.getPrincipal();
-                Map<String, Object> attributes = oauth2User.getAttributes();
-                
-                String email = (String) attributes.get("email");
-                String name = (String) attributes.get("name");
-                log.info("Usuário OAuth2 autenticado: {} ({})", name, email);
-                
-                Map<String, Object> oauth2Info = new HashMap<>();
-                oauth2Info.put("registrationId", oauth2Auth.getAuthorizedClientRegistrationId());
-                
-                Map<String, Object> userAttributes = new HashMap<>();
-                for (String key : oauth2User.getAttributes().keySet()) {
-                    if (key.equalsIgnoreCase("email") || key.equalsIgnoreCase("name")) {
-                        userAttributes.put(key, oauth2User.getAttribute(key));
-                    } else {
-                        userAttributes.put(key, "[MASKED]"); // Não exibir valores sensíveis
-                    }
-                }
-                oauth2Info.put("userAttributes", userAttributes);
-                authInfo.put("oauth2", oauth2Info);
-            }
-            
-            info.put("authentication", authInfo);
-        } else {
-            info.put("authentication", "Not authenticated");
-        }
-
-        // Adicionar um cookie de teste para verificar o comportamento
-        Cookie testCookie = new Cookie("debug_test_cookie", "test_value");
-        testCookie.setPath("/");
-        testCookie.setHttpOnly(true);
-        testCookie.setSecure(true);
-        testCookie.setMaxAge(60); // 1 minuto apenas
         
-        String domain = System.getenv("COOKIE_DOMAIN");
-        if (domain != null && !domain.isEmpty()) {
-            testCookie.setDomain(domain);
-        }
+        // Headers completos (para compatibilidade com endpoint original)
+        info.put("headers", DebugInfoExtractor.extractHeaders(request));
         
-        response.addCookie(testCookie);
+        // Informações de sessão, autenticação e cookies
+        info.put("session", DebugInfoExtractor.extractSessionInfo(request));
+        info.put("authentication", DebugInfoExtractor.extractAuthenticationInfo());
+        info.put("cookies", DebugInfoExtractor.extractCookieInfo(request));
         
-        // Adicionar um header de teste para verificar comportamento
-        response.addHeader("X-Debug-Test", "test_value");
-        
-        log.info("Debug authentication info requested by {}", request.getRemoteAddr());
+        // Adicionar cookie de teste para verificar comportamento
+        addTestCookie(response);
         
         return info;
     }
-    
+
+    /**
+     * Endpoint específico para informações de sessão (compatibilidade)
+     */
+    @GetMapping("/session")
+    public Map<String, Object> getSessionInfo(HttpServletRequest request) {
+        Map<String, Object> info = new HashMap<>();
+        
+        // Informações de sessão
+        Map<String, Object> sessionInfo = DebugInfoExtractor.extractSessionInfo(request);
+        info.putAll(sessionInfo);
+        
+        // Informações de autenticação
+        info.put("authentication", DebugInfoExtractor.extractAuthenticationInfo());
+        
+        // Informações de cookies
+        info.put("cookies", DebugInfoExtractor.extractCookieInfo(request));
+        
+        return info;
+    }
+
+    /**
+     * Endpoints para gerenciamento de sessão
+     */
+    @GetMapping("/sessions/info")
+    public ResponseEntity<Map<String, Object>> getDetailedSessionInfo(HttpServletRequest request) {
+        Map<String, Object> info = new HashMap<>();
+        
+        // Informações de sessão
+        Map<String, Object> sessionInfo = DebugInfoExtractor.extractSessionInfo(request);
+        info.putAll(sessionInfo);
+        
+        // Informações de autenticação
+        info.put("authentication", DebugInfoExtractor.extractAuthenticationInfo());
+        
+        // Informações de cookies
+        info.put("cookies", DebugInfoExtractor.extractCookieInfo(request));
+        
+        // Headers da requisição
+        info.put("headers", DebugInfoExtractor.extractHeaders(request));
+        
+        return ResponseEntity.ok(info);
+    }
+
+    @GetMapping("/sessions/create")
+    public ResponseEntity<Map<String, Object>> createSession(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(true);
+        session.setAttribute("testAttribute", "Created at " + System.currentTimeMillis());
+        
+        // Adicionar cookie de teste
+        Cookie cookie = new Cookie("TEST_SESSION_COOKIE", "test-value");
+        cookie.setPath("/");
+        cookie.setMaxAge(3600);
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "Session created and test cookie set",
+            "sessionId", session.getId(),
+            "creationTime", new java.util.Date(session.getCreationTime()).toString()
+        ));
+    }
+
+    @GetMapping("/sessions/invalidate")
+    public ResponseEntity<Map<String, Object>> invalidateSession(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        
+        if (session != null) {
+            String sessionId = session.getId();
+            session.invalidate();
+            
+            // Remover o cookie JSESSIONID
+            Cookie cookie = new Cookie("JSESSIONID", null);
+            cookie.setPath("/");
+            cookie.setMaxAge(0);
+            response.addCookie(cookie);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Session invalidated",
+                "invalidatedSessionId", sessionId
+            ));
+        } else {
+            return ResponseEntity.ok(Map.of(
+                "success", false,
+                "message", "No active session to invalidate"
+            ));
+        }
+    }
+
     /**
      * Endpoint para testar cookies
      */
@@ -192,7 +187,7 @@ public class DebugController {
             testCookie.setPath("/");
             testCookie.setHttpOnly(true);
             testCookie.setSecure(true);
-            testCookie.setMaxAge(60 * i); // Cada cookie com tempo de expiração diferente
+            testCookie.setMaxAge(60 * i);
             
             if (i == 2) {
                 // Para o cookie 2, tentar definir explicitamente o atributo SameSite
@@ -208,5 +203,24 @@ public class DebugController {
         result.put("message", "Test cookies added. Please check if they are visible in your browser.");
         
         return result;
+    }
+
+    /**
+     * Método auxiliar para adicionar cookie de teste
+     */
+    private void addTestCookie(HttpServletResponse response) {
+        Cookie testCookie = new Cookie("debug_test_cookie", "test_value");
+        testCookie.setPath("/");
+        testCookie.setHttpOnly(true);
+        testCookie.setSecure(true);
+        testCookie.setMaxAge(60);
+        
+        String domain = System.getenv("COOKIE_DOMAIN");
+        if (domain != null && !domain.isEmpty()) {
+            testCookie.setDomain(domain);
+        }
+        
+        response.addCookie(testCookie);
+        response.addHeader("X-Debug-Test", "test_value");
     }
 }
