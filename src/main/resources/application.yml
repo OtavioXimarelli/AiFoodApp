@@ -76,6 +76,8 @@ maritaca:
 app:
   frontend:
     url: ${FRONTEND_URL:http://localhost:8082}
+  debug:
+    enabled: ${APP_DEBUG_ENABLED:false}  # Enable debug features only when explicitly set
 
 # Logging
 logging:
@@ -83,18 +85,9 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
     org.springframework.security.web: DEBUG
+
+# Server Configuration
 server:
-  servlet:
-    session:
-      cookie:
-        name: JSESSIONID
-        http-only: true
-        secure: ${COOKIE_SECURE:true}  # Set to true in production
-        same-site: ${COOKIE_SAME_SITE:lax}  # 'lax' works best for OAuth2 flows
-        max-age: 2592000  # 30 days in seconds
-        domain: ${COOKIE_DOMAIN:aifoodapp.site}  # Production domain
-      timeout: 2592000  # 30 days in seconds
-      tracking-modes: cookie  # Use cookies for session tracking, not URL parameters
   forward-headers-strategy: native  # Use native container support for forwarded headers
   use-forward-headers: true  # Enable processing of forwarded headers from proxies
   error:

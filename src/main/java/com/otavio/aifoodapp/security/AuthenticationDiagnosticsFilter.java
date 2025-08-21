@@ -18,11 +18,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 /**
  * Filtro para diagnóstico de autenticação e sessão
  * Registra informações detalhadas sobre o estado de autenticação em cada requisição
+ * Ativo apenas quando app.debug.enabled=true
  */
 @Component
+@ConditionalOnProperty(name = "app.debug.enabled", havingValue = "true", matchIfMissing = false)
 @Order(Ordered.HIGHEST_PRECEDENCE + 2) // Executar após RateLimitingFilter e ApiPathFixFilter
 @Slf4j
 public class AuthenticationDiagnosticsFilter extends OncePerRequestFilter {

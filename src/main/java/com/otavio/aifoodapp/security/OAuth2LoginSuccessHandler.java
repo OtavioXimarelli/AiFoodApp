@@ -79,104 +79,21 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
                 
                 // Configurar tempo de expiração da sessão
                 session.setMaxInactiveInterval(60 * 60 * 24 * 30); // 30 dias
+                
+                // Add custom headers for debugging/frontend
+                response.addHeader("X-Auth-Success", "true");
+                response.addHeader("X-Frontend-URL", frontendUrl);
             }
         }
         
-        // Validar authentication para evitar NullPointerException
-        if (authentication == null) {
-            log.error("Authentication object is null during redirect");
-            try {
-                response.sendRedirect(frontendUrl + "/login?error=invalid_auth");
-            } catch (IOException e) {
-                log.error("Failed to redirect with null authentication: {}", e.getMessage(), e);
-            }
-            return;
-        }
-
+        // Use Spring's built-in redirect mechanism (much simpler and more reliable)
         try {
-            // Log session information for debugging
-            log.info("Session ID before redirect: {}", request.getSession().getId());
-            log.info("Redirecting to target URL: {}", this.getDefaultTargetUrl());
-            // Já validamos authentication == null acima, então é seguro chamar getName()
-            log.info("Authentication name: {}", authentication.getName());
-            log.info("Frontend URL configured as: {}", frontendUrl);
-            
-            // Ensure we're not causing a redirect loop
-            String referer = request.getHeader("Referer");
-            log.info("Referer: {}", referer);
-            
-            // Em vez de usar o super, fazer redirecionamento direto para o frontend
-            String redirectUrl = frontendUrl + "/dashboard";
-            log.info("Redirecting directly to frontend: {}", redirectUrl);
-            
-            try {
-                // Primeiro vamos garantir que a resposta ainda está aberta
-                if (response.isCommitted()) {
-                    log.warn("Response already committed, can't redirect to {}", redirectUrl);
-                    return;
-                }
-                
-                // Limpar o buffer antes do redirecionamento para evitar erros
-                response.resetBuffer();
-                
-                // Verificar e garantir que a sessão está configurada corretamente
-                if (request.getSession(false) != null) {
-                    log.debug("Session is valid before redirect: {}", request.getSession().getId());
-                } else {
-                    log.warn("No session available before redirect, creating new session");
-                    request.getSession(true);
-                }
-                
-                // Adicionar um header para identificar o sucesso do login
-                response.setHeader("X-Auth-Success", "true");
-                
-                // Simplificar e usar apenas 302 redirect sem cookies complexos
-                log.info("Performing 302 redirect to frontend: {}", redirectUrl);
-                response.setStatus(HttpServletResponse.SC_FOUND);
-                response.setHeader("Location", redirectUrl);
-                response.flushBuffer();
-                
-                log.info("Successfully redirected after OAuth2 login");
-            } catch (IOException | IllegalStateException e) {
-                log.error("Error during redirect: {}", e.getMessage(), e);
-                // Tentar uma abordagem alternativa em caso de erro - JavaScript redirect
-                try {
-                    response.resetBuffer();
-                    response.setContentType("text/html;charset=UTF-8");
-                    response.getWriter().write("<html><head><script>window.location.href='" + redirectUrl + 
-                                          "';</script></head><body>Redirecting to dashboard...</body></html>");
-                    response.flushBuffer();
-                } catch (IOException | IllegalStateException ex) {
-                    log.error("Failed even with JavaScript redirect: {}", ex.getMessage());
-                }
-            }
+            super.onAuthenticationSuccess(request, response, authentication);
         } catch (Exception e) {
             log.error("Error during OAuth2 login success redirect: {}", e.getMessage(), e);
-            // Fall back to simplest possible redirect approach
-            try {
-                String redirectUrl = frontendUrl + "/dashboard";
-                log.info("Falling back to simplest redirect approach for: {}", redirectUrl);
-                
-                // Reset any previous response
-                response.resetBuffer();
-                
-                // Set response headers directly
-                response.setStatus(HttpServletResponse.SC_FOUND);
-                response.setHeader("Location", redirectUrl);
-                response.flushBuffer();
-            } catch (IOException | IllegalStateException ex) {
-                log.error("Failed to redirect even in emergency fallback handler: {}", ex.getMessage(), ex);
-                
-                // Last resort - try to send plain text
-                try {
-                    response.setContentType("text/plain;charset=UTF-8");
-                    response.setStatus(HttpServletResponse.SC_OK);
-                    response.getWriter().write("Authentication successful. Please navigate to " + frontendUrl + "/dashboard manually.");
-                    response.flushBuffer();
-                } catch (IOException ignored) {
-                    // Nothing more we can do
-                }
-            }
+            // Simple fallback redirect
+            String redirectUrl = frontendUrl + "/dashboard";
+            response.sendRedirect(redirectUrl);
         }
     }
     

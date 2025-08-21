@@ -1,8 +1,8 @@
 package com.otavio.aifoodapp.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import jakarta.annotation.PostConstruct;
@@ -11,8 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Debug configuration for Spring Security
  * Provides additional diagnostic tools for authentication issues
+ * Only active when app.debug.enabled=true
  */
 @Configuration
+@ConditionalOnProperty(name = "app.debug.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class SecurityDebugConfig {
 
@@ -26,7 +28,6 @@ public class SecurityDebugConfig {
      * This is helpful for diagnosing cookie and session issues
      */
     @Bean
-    @Profile({"dev", "prod"})  // Only enable in dev and prod profiles
     public CommonsRequestLoggingFilter requestLoggingFilter() {
         CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
         filter.setIncludeQueryString(true);
