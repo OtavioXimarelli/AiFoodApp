@@ -90,4 +90,47 @@ public class ChatService {
 
         return null;
     }
+
+    public Mono <String> GetNutrictionFacts (String foodName) {
+        String prompt = String.format("""
+                Provide detailed nutritional information for the following food item: %s.
+                The information should include:
+                1. Calories
+                2. Proteins
+                3. Carbohydrates
+                4. Fats
+                5. Vitamins and Minerals
+                6. Dietary Fiber
+                7. Serving Size
+                8. Health Benefits
+                9. Potential Allergens
+                10. Recommended Daily Intake
+
+                Please present the information in a clear and organized manner.
+                
+                **Criteria:**
+                1.  **Language:** Portuguese
+                2.  **Output Required:** Nutritional Facts
+                3.  **Output Format:** Valid JSON array with key-value pairs for each nutritional fact.
+                4.  **Example Output:**
+                [
+                    {"Nutrient": "Calories", "Amount": "200 kcal"},
+                    {"Nutrient": "Proteins", "Amount": "5 g"},
+                    {"Nutrient": "Carbohydrates", "Amount": "30 g"},
+                    {"Nutrient": "Fats", "Amount": "10 g"},
+                    {"Nutrient": "Vitamins and Minerals", "Amount": "Vitamin A, Vitamin C, Calcium"},
+                    {"Nutrient": "Dietary Fiber", "Amount": "3 g"},
+                    {"Nutrient": "Serving Size", "Amount": "100 g"},
+                    {"Nutrient": "Health Benefits", "Amount": "Rich in antioxidants, supports immune health"},
+                    {"Nutrient": "Potential Allergens", "Amount": "None"},
+                    {"Nutrient": "Recommended Daily Intake", "Amount": "Varies by age
+                """, foodName);
+
+        Prompt nutritionPrompt = new Prompt(List.of(
+                new SystemMessage(systemPrompt),
+                new UserMessage(prompt)));
+
+        return maritacaChatClient.call(nutritionPrompt)
+                .map(response -> response.getResult().getOutput().getText());
+    }
 }
