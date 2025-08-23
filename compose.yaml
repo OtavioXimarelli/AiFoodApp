@@ -1,9 +1,9 @@
 services:
   postgres:
     image: postgres:15
-    container_name: postgresBD
+    container_name: postgresDB
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: foodDB
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
@@ -11,15 +11,18 @@ services:
     restart: unless-stopped
     networks:
       - aifood-net
-    # ⚠️ Exponha a porta APENAS em desenvolvimento, nunca em produção
-    # ports:
-    #   - "5431:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   aifoodapp:
     build: .
     container_name: aifoodapp
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
@@ -31,12 +34,16 @@ services:
       MARITACA_API_KEY: ${MARITACA_API_KEY}
       FRONTEND_URL: ${FRONTEND_URL}
       COOKIE_SECURE: "true"
-      COOKIE_DOMAIN: ".aifoodapp.site"
+      COOKIE_DOMAIN: "aifoodapp.site"
     ports:
       - "8080:8080"
     restart: unless-stopped
     networks:
       - aifood-net
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
 volumes:
   postgres_data:
