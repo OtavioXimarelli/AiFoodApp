@@ -1,13 +1,11 @@
 package com.otavio.aifoodapp.security;
 
-import com.otavio.aifoodapp.filter.SameSiteCookieFilter;
 import jakarta.servlet.DispatcherType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,10 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.savedrequest.NullRequestCache;
-import org.springframework.session.web.http.CookieSerializer;
-import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.Arrays;
@@ -32,7 +27,7 @@ public class SecurityConfig {
     @Value("${app.frontend.url}")
     private String frontEndUrl;
 
-    @Value("${COOKIE_SECURE:true}")
+    @Value("${COOKIE_SECURE:false}")
     private boolean cookieSecure;
 
     @Value("${COOKIE_SAME_SITE:lax}")
@@ -43,16 +38,13 @@ public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
     private final JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint;
-    private final SameSiteCookieFilter sameSiteCookieFilter;
 
-    // Removed TokenRefreshFilter dependency - using standard OAuth2 flow only
+    // Removed TokenRefreshFilter and SameSiteCookieFilter dependencies - using standard OAuth2 flow only
     public SecurityConfig(
             OAuth2LoginSuccessHandler oauth2LoginSuccessHandler,
-            JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint,
-            SameSiteCookieFilter sameSiteCookieFilter) {
+            JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint) {
         this.oauth2LoginSuccessHandler = oauth2LoginSuccessHandler;
         this.jsonAuthenticationEntryPoint = jsonAuthenticationEntryPoint;
-        this.sameSiteCookieFilter = sameSiteCookieFilter;
     }
 
     @Bean
@@ -105,29 +97,13 @@ public class SecurityConfig {
                         .deleteCookies("JSESSIONID")
                 )
 
-                // Only add the SameSite cookie filter - removed TokenRefreshFilter
-                .addFilterBefore(sameSiteCookieFilter, UsernamePasswordAuthenticationFilter.class)
+                // Remove the disabled filter reference - no additional filters needed
                 .build();
     }
 
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> httpCookieOAuth2AuthorizationRequestRepository() {
         return new HttpCookieOAuth2AuthorizationRequestRepository();
-    }
-
-    @Bean
-    @Primary
-    public CookieSerializer cookieSerializer() {
-        DefaultCookieSerializer serializer = new DefaultCookieSerializer();
-        log.info("Configuring session cookies with secure={}, sameSite={}, domain={}",
-                cookieSecure, cookieSameSite, cookieDomain);
-        serializer.setUseSecureCookie(cookieSecure);
-        serializer.setCookieName("JSESSIONID");
-        serializer.setDomainName(cookieDomain);
-        serializer.setCookiePath("/");
-        serializer.setSameSite(cookieSameSite);
-        serializer.setUseHttpOnlyCookie(true);
-        return serializer;
     }
 
     @Bean

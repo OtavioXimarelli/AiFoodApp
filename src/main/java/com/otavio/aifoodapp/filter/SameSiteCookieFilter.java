@@ -14,15 +14,16 @@ import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Filter to add SameSite attributes to cookies.
  * Necessary because the SameSite attribute is not available in the standard Jakarta Servlet cookie API.
+ *
+ * DISABLED: Using CookieConfig bean instead to avoid conflicts with Spring Session
  */
-@Component
+// @Component  // DISABLED - Commented out to prevent conflicts
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
 public class SameSiteCookieFilter implements Filter {
@@ -30,7 +31,7 @@ public class SameSiteCookieFilter implements Filter {
     @Value("${COOKIE_SAME_SITE:lax}")
     private String sameSite;
 
-    @Value("${COOKIE_DOMAIN:.aifoodapp.site}")
+    @Value("${COOKIE_DOMAIN:aifoodapp.site}")
     private String cookieDomain;
     
     @Value("${COOKIE_SECURE:true}")
@@ -39,38 +40,14 @@ public class SameSiteCookieFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
             throws IOException, ServletException {
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-        
-        // Custom wrapper to intercept cookies and add the SameSite attribute
-        SameSiteResponseWrapper wrappedResponse = new SameSiteResponseWrapper(httpResponse, sameSite, cookieDomain);
-        wrappedResponse.setSecureCookies(secure);
-        
-        try {
-            chain.doFilter(request, wrappedResponse);
-        } finally {
-            // Add modified cookie headers to original response
-            Collection<String> headers = wrappedResponse.getHeaderNames();
-            for (String header : headers) {
-                if (header.equalsIgnoreCase("Set-Cookie")) {
-                    Collection<String> cookieHeaders = wrappedResponse.getHeaders(header);
-                    if (cookieHeaders != null) {
-                        // Remove original cookie headers
-                        httpResponse.setHeader(header, null);
-                        
-                        // Add modified cookie headers
-                        for (String cookieHeader : cookieHeaders) {
-                            httpResponse.addHeader(header, cookieHeader);
-                        }
-                    }
-                }
-            }
-        }
+        // DISABLED: This filter is no longer active
+        // Using CookieConfig bean instead for proper cookie handling
+        chain.doFilter(request, response);
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        log.info("Initializing SameSiteCookieFilter with sameSite={}, domain={}, secure={}", 
-                sameSite, cookieDomain, secure);
+    public void init(FilterConfig filterConfig) {
+        log.info("SameSiteCookieFilter is DISABLED - Using CookieConfig bean instead");
     }
 
     @Override
