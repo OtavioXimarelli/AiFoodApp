@@ -1,6 +1,5 @@
 package com.otavio.aifoodapp.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.otavio.aifoodapp.dto.FoodItemCreateDto;
 import com.otavio.aifoodapp.model.FoodItem;
 import com.otavio.aifoodapp.model.User;
 import com.otavio.aifoodapp.repository.FoodItemRepository;
@@ -190,17 +190,11 @@ public class FoodItemService {
      * @param foodItems List of basic food items with name, quantity, and expiration
      * @return List of saved food items with complete nutritional information
      */
-    public List<FoodItem> saveAllWithAiEnhancement(List<FoodItem> foodItems) {
-        List<FoodItem> enhancedFoodItems = new ArrayList<>();
-        User currentUser = getCurrentUser();
-        
-        for (FoodItem item : foodItems) {
-            item.setUser(currentUser);
-            FoodItem enhancedItem = foodAiService.determineNutritionalFacts(item).block();
-            enhancedFoodItems.add(enhancedItem);
-        }
-        
-        return foodItemRepository.saveAll(enhancedFoodItems);
+    public FoodItem saveWithAIEnhancement(FoodItem foodItem) {
+        foodItem.setUser(getCurrentUser());
+        return foodAiService.determineNutritionalFacts(foodItem)
+                .map(foodItemRepository::save)
+                .block();
     }
 
     /**
@@ -284,5 +278,79 @@ public class FoodItemService {
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item with id " + id + " not found");
         }
+    }
+
+    /**
+     * List all food items for a specific user
+     *
+     * @param user the user to list food items for
+     * @return a list of food items belonging to the user
+     */
+    public List<FoodItem> listAllForUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        return foodItemRepository.findByUserId(user.getId());
+    }
+
+    /**
+     * Get a food item by ID
+     *
+     * @param id the ID of the food item to retrieve
+     * @return the food item, or null if not found
+     */
+    public FoodItem getById(Long id) {
+        return foodItemRepository.findById(id).orElse(null);
+    }
+
+    /**
+     * Create a new food item with AI-enhanced nutritional data
+     *
+     * @param createDto the DTO containing basic food item information
+     * @param user the user who owns the food item
+     * @return the created food item with AI-enhanced data
+     */
+    public FoodItem createWithAiEnhancement(FoodItemCreateDto createDto, User user) {
+        FoodItem foodItem = new FoodItem();
+        foodItem.setName(createDto.name());
+        foodItem.setQuantity(createDto.quantity());
+        foodItem.setExpiration(createDto.expiration());
+        foodItem.setUser(user);
+
+        // Enhance with AI (async)
+        foodAiService.determineNutritionalFacts(foodItem)
+            .subscribe(
+                enhancedItem -> {
+                    log.info("Successfully enhanced food item {} with AI", enhancedItem.getName());
+                    foodItemRepository.save(enhancedItem);
+                },
+                error -> log.error("Failed to enhance food item {} with AI: {}", foodItem.getName(), error.getMessage())
+            );
+
+        return foodItemRepository.save(foodItem);
+    }
+
+    /**
+     * Update an existing food item
+     *
+     * @param id the ID of the food item to update
+     * @param createDto the DTO containing the updated information
+     * @param user the user who owns the food item
+     * @return the updated food item
+     */
+    public FoodItem update(Long id, FoodItemCreateDto createDto, User user) {
+        FoodItem existingItem = foodItemRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Food item not found"));
+
+        // Check ownership
+        if (!existingItem.getUser().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to update this food item");
+        }
+
+        existingItem.setName(createDto.name());
+        existingItem.setQuantity(createDto.quantity());
+        existingItem.setExpiration(createDto.expiration());
+
+        return foodItemRepository.save(existingItem);
     }
 }

@@ -44,8 +44,16 @@ public class WebConfig {
         // Permite que o frontend envie credenciais (cookies)
         config.setAllowCredentials(true);
 
-        // Define as origens permitidas
-        config.setAllowedOrigins(List.of(frontEndUrl, "https://aifoodapp.site", "https://www.aifoodapp.site"));
+        // Define as origens permitidas - incluindo portas de desenvolvimento local
+        config.setAllowedOrigins(List.of(
+            frontEndUrl, 
+            "https://aifoodapp.site", 
+            "https://www.aifoodapp.site",
+            "http://localhost:8082",  // Frontend development port
+            "http://localhost:3000",  // Alternative React development port
+            "http://127.0.0.1:8082",  // Alternative localhost format
+            "http://127.0.0.1:3000"   // Alternative localhost format
+        ));
 
         // Permite todos os cabeçalhos e métodos
         config.setAllowedHeaders(List.of("*"));

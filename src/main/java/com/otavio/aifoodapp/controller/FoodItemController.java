@@ -1,6 +1,5 @@
 package com.otavio.aifoodapp.controller;
 
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,7 +50,7 @@ public class FoodItemController {
     @PostMapping("/create")
     public ResponseEntity<?> create(@Valid @RequestBody FoodItemCreateDto createDto) {
         try {
-            log.info("Received create food request: {}", createDto.getName());
+            log.info("Received create food request: {}", createDto.name());
             FoodItem foodItem = foodMapper.map(createDto);
             FoodItem savedItem = foodItemService.saveWithAiEnhancement(foodItem);
             return ResponseEntity.status(HttpStatus.CREATED).body(foodMapper.map(savedItem));

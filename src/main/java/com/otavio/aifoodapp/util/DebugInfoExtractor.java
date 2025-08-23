@@ -1,6 +1,5 @@
 package com.otavio.aifoodapp.util;
 
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
