@@ -76,21 +76,21 @@ public class RecipeMapper {
             return null;
         }
 
-        RecipeDto dto = new RecipeDto();
-        dto.setId(recipe.getId());
-        dto.setName(recipe.getName());
-        dto.setDescription(recipe.getDescription());
-        dto.setInstructions(recipe.getInstructions());
-        dto.setNutritionalInfo(recipe.getNutritionalInfo());
-
+        Set<RecipeIngredientDto> ingredientsDto = null;
         if (recipe.getIngredientsList() != null) {
-            Set<RecipeIngredientDto> ingredientsDto = recipe.getIngredientsList().stream()
+            ingredientsDto = recipe.getIngredientsList().stream()
                     .map(this::toIngredientDto)
                     .collect(Collectors.toSet());
-            dto.setIngredientsList(ingredientsDto);
-
         }
-        return dto;
+
+        return new RecipeDto(
+            recipe.getId(),
+            recipe.getName(),
+            recipe.getDescription(),
+            recipe.getNutritionalInfo(),
+            recipe.getInstructions(),
+            ingredientsDto
+        );
     }
 
     public List<RecipeDto> toDto(List<Recipe> recipes) {
@@ -103,10 +103,11 @@ public class RecipeMapper {
     }
 
     private RecipeIngredientDto toIngredientDto(RecipeIngredient recipeIngredient) {
-        RecipeIngredientDto      dto = new RecipeIngredientDto();
-        dto.setId(recipeIngredient.getId());
-        dto.setQuantity(recipeIngredient.getQuantity());
-        dto.setUnit(recipeIngredient.getUnit());
-        return dto;
+        return new RecipeIngredientDto(
+            recipeIngredient.getId(),
+            recipeIngredient.getName(),
+            recipeIngredient.getQuantity(),
+            recipeIngredient.getUnit()
+        );
     }
 }
