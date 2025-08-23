@@ -7,18 +7,28 @@ spring:
     username: ${DB_USERNAME:foodappadm}
     password: ${DB_PASSWORD:foodappadminconnectpass}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      initialization-fail-timeout: 30000
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none  # Changed from 'update' to 'none' to avoid conflict with Flyway
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
 
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-    
+    out-of-order: true  # Added to allow out of order migrations if needed
+    validate-on-migrate: true
+
   # Spring Session Configuration for persistent token storage
   session:
     store-type: jdbc
@@ -28,11 +38,12 @@ spring:
       cleanup-cron: "0 0 4 * * *"  # Cleanup expired sessions at 4 AM daily
     timeout: 2592000  # 30 days in seconds
     cookie:
-      name: SESSION  # Use standardized name
+      name: JSESSIONID  # Use standardized name
       max-age: 2592000  # 30 days in seconds
       secure: ${COOKIE_SECURE:true}  # true in production
       http-only: true
       same-site: ${COOKIE_SAME_SITE:lax}  # 'lax' works best for OAuth2 flows, use 'strict' only if necessary
+      # Remove leading dot if present - Spring Security doesn't accept domains starting with dot
       domain: ${COOKIE_DOMAIN:aifoodapp.site}
       
   # Google OAuth2 Configuration
@@ -89,7 +100,6 @@ logging:
 # Server Configuration
 server:
   forward-headers-strategy: native  # Use native container support for forwarded headers
-  use-forward-headers: true  # Enable processing of forwarded headers from proxies
   error:
     include-stacktrace: never  # Don't include stacktraces in error responses
     include-message: always    # Include error messages in responses
