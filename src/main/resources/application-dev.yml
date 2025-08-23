@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: AiFoodApp
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5431/foodDB}
+    username: ${DB_USERNAME:foodappadm}
+    password: ${DB_PASSWORD:foodappadminconnectpass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Spring Session Configuration for persistent token storage
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never
+      table-name: SPRING_SESSION
+      cleanup-cron: "0 0 4 * * *"
+    timeout: 2592000
+    cookie:
+      name: JSESSIONID
+      max-age: 2592000
+      secure: false
+      http-only: true
+      same-site: lax
+      domain: localhost
+
+  # Google OAuth2 Configuration for Development
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - openid
+              - profile
+              - email
+              - https://www.googleapis.com/auth/userinfo.email
+              - https://www.googleapis.com/auth/userinfo.profile
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            client-authentication-method: client_secret_basic
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v2/userinfo
+            user-name-attribute: email
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+
+# Maritaca AI Configuration
+maritaca:
+  api:
+    url: ${MARITACA_API_URL:https://chat.maritaca.ai/api/chat/completions}
+    key: ${MARITACA_API_KEY:}
+    model: ${MARITACA_API_MODEL:sabiazinho-3}
+  system:
+    prompt: ${MARITACA_SYSTEM_PROMPT:"Você é um assistente culinário"}
+
+# App Configuration
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:8082}
+  debug:
+    enabled: ${APP_DEBUG_ENABLED:true}  # Enable debug features in development
+
+# Logging
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.web: DEBUG
+    com.otavio.aifoodapp: DEBUG
+
+# Server Configuration
+server:
+  forward-headers-strategy: native
+  error:
+    include-stacktrace: on-param  # Show stacktraces in development when requested
+    include-message: always
