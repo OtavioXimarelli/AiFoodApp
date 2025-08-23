@@ -30,12 +30,6 @@ import com.otavio.aifoodapp.service.FoodItemService;
 
 @RestController
 @RequestMapping("/api/foods")
-@CrossOrigin(
-    origins = {"http://localhost:5173", "https://aifoodapp.site"}, 
-    allowCredentials = "true",
-    allowedHeaders = {"Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "X-XSRF-TOKEN"},
-    exposedHeaders = {"X-XSRF-TOKEN"}
-)
 public class FoodItemController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FoodItemController.class);
     
