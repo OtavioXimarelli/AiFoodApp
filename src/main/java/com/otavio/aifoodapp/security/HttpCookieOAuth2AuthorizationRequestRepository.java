@@ -72,8 +72,24 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
         
         if (System.getenv("COOKIE_DOMAIN") != null) {
             String domain = System.getenv("COOKIE_DOMAIN");
-            cookieValue += "; Domain=" + domain;
-            cookie.setDomain(domain);
+            // Remove any leading dot from the domain to comply with RFC 6265
+            if (domain.startsWith(".")) {
+                domain = domain.substring(1);
+            }
+            
+            // Make sure the domain is valid before setting it
+            try {
+                java.net.URI uri = new java.net.URI("https://" + domain);
+                String host = uri.getHost();
+                if (host != null) {
+                    cookieValue += "; Domain=" + host;
+                    cookie.setDomain(host);
+                    log.debug("Setting cookie domain to: {}", host);
+                }
+            } catch (Exception e) {
+                log.error("Invalid cookie domain: {}, using default", domain, e);
+                // Do not set the domain, let the browser use the default
+            }
         }
         
         response.addHeader("Set-Cookie", cookieValue);
@@ -96,8 +112,24 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
                     
                     if (System.getenv("COOKIE_DOMAIN") != null) {
                         String domain = System.getenv("COOKIE_DOMAIN");
-                        cookieValue += "; Domain=" + domain;
-                        cookie.setDomain(domain);
+                        // Remove any leading dot from the domain to comply with RFC 6265
+                        if (domain.startsWith(".")) {
+                            domain = domain.substring(1);
+                        }
+                        
+                        // Make sure the domain is valid before setting it
+                        try {
+                            java.net.URI uri = new java.net.URI("https://" + domain);
+                            String host = uri.getHost();
+                            if (host != null) {
+                                cookieValue += "; Domain=" + host;
+                                cookie.setDomain(host);
+                                log.debug("Setting cookie domain for deletion to: {}", host);
+                            }
+                        } catch (Exception e) {
+                            log.error("Invalid cookie domain for deletion: {}, using default", domain, e);
+                            // Do not set the domain, let the browser use the default
+                        }
                     }
                     
                     response.addHeader("Set-Cookie", cookieValue);
