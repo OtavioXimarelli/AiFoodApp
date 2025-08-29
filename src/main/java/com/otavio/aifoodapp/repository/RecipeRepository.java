@@ -1,8 +1,11 @@
 package com.otavio.aifoodapp.repository;
 
-import com.otavio.aifoodapp.model.Recipe;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.otavio.aifoodapp.model.Recipe;
+
 public interface RecipeRepository extends JpaRepository <Recipe, Long> {
-    // Custom query methods can be defined here if needed
+    List<Recipe> findByUserId(Long userId);
 }

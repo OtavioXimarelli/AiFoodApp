@@ -39,7 +39,7 @@ public class RecipeController {
         // recipeMapper is not used, so we don't need to assign it to a field
     }
 
-    @GetMapping("/gen")
+    @GetMapping("/generate")
     public Mono<ResponseEntity<List<RecipeDto>>> generateRecipe() {
         List<FoodItem> foodItems = foodItemService.listAll();
 

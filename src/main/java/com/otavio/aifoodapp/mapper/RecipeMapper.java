@@ -1,6 +1,7 @@
 package com.otavio.aifoodapp.mapper;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.otavio.aifoodapp.dto.RecipeDto;
@@ -54,8 +55,8 @@ public class RecipeMapper {
             });
 
             return dtos.stream().map(this::mapDtoToEntity).collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.error("Error parsing the  json: {} ", sanitizedJson, e);
+        } catch (JsonProcessingException e) {
+            logger.error("Error parsing the JSON: {} ", sanitizedJson, e);
             return Collections.emptyList();
         }
     }
@@ -105,7 +106,7 @@ public class RecipeMapper {
     private RecipeIngredientDto toIngredientDto(RecipeIngredient recipeIngredient) {
         return new RecipeIngredientDto(
             recipeIngredient.getId(),
-            recipeIngredient.getName(),
+            recipeIngredient.getFoodItem() != null ? recipeIngredient.getFoodItem().getName() : "Unknown",
             recipeIngredient.getQuantity(),
             recipeIngredient.getUnit()
         );

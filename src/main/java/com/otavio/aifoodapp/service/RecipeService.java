@@ -4,6 +4,7 @@ import com.otavio.aifoodapp.dto.RecipeDto;
 import com.otavio.aifoodapp.mapper.RecipeMapper;
 import com.otavio.aifoodapp.model.Recipe;
 import com.otavio.aifoodapp.model.RecipeIngredient;
+import com.otavio.aifoodapp.model.User;
 import com.otavio.aifoodapp.repository.RecipeRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.hibernate.Hibernate;
@@ -75,5 +76,63 @@ public class RecipeService {
 
 
         return recipeMapper.toDto(savedRecipes);
+    }
+
+    /**
+     * Get a recipe by ID and return it as an Optional
+     *
+     * @param id the recipe ID
+     * @return Optional containing the recipe if found
+     */
+    public Optional<RecipeDto> getById(Long id) {
+        return recipeRepository.findById(id)
+                .map(recipe -> {
+                    // Initialize lazy-loaded collections to prevent LazyInitializationException
+                    Hibernate.initialize(recipe.getInstructions());
+                    Hibernate.initialize(recipe.getNutritionalInfo());
+                    Hibernate.initialize(recipe.getIngredientsList());
+
+                    // Map to DTO
+                    return recipeMapper.toDto(recipe);
+                });
+    }
+
+    /**
+     * Get all recipes for a specific user
+     *
+     * @param user the user to fetch recipes for
+     * @return list of recipe DTOs for the user
+     */
+    public List<RecipeDto> getAllRecipesForUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        List<Recipe> recipes = recipeRepository.findByUserId(user.getId());
+
+        // Initialize lazy-loaded collections for each recipe
+        for (Recipe recipe : recipes) {
+            Hibernate.initialize(recipe.getInstructions());
+            Hibernate.initialize(recipe.getNutritionalInfo());
+            Hibernate.initialize(recipe.getIngredientsList());
+            for (RecipeIngredient ingredient : recipe.getIngredientsList()) {
+                Hibernate.initialize(ingredient.getFoodItem());
+            }
+        }
+
+        return recipeMapper.toDto(recipes);
+    }
+
+    /**
+     * Delete a recipe by ID
+     *
+     * @param id the ID of the recipe to delete
+     */
+    public void delete(Long id) {
+        if (!recipeRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe with id " + id + " not found");
+        }
+
+        recipeRepository.deleteById(id);
     }
 }

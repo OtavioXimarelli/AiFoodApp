@@ -1,23 +1,23 @@
 package com.otavio.aifoodapp.security;
 
-import com.otavio.aifoodapp.enums.UserRoles;
-import com.otavio.aifoodapp.model.User;
-import com.otavio.aifoodapp.repository.UserRepository;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.util.Map;
-import java.util.Optional;
+import com.otavio.aifoodapp.enums.UserRoles;
+import com.otavio.aifoodapp.model.User;
+import com.otavio.aifoodapp.repository.UserRepository;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor

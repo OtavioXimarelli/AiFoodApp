@@ -1,7 +1,8 @@
 package com.otavio.aifoodapp.security;
 
-import jakarta.servlet.DispatcherType;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
@@ -16,8 +17,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.Arrays;
-import java.util.List;
+import jakarta.servlet.DispatcherType;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
@@ -27,14 +28,8 @@ public class SecurityConfig {
     @Value("${app.frontend.url}")
     private String frontEndUrl;
 
-    @Value("${COOKIE_SECURE:false}")
-    private boolean cookieSecure;
-
     @Value("${COOKIE_SAME_SITE:lax}")
     private String cookieSameSite;
-
-    @Value("${COOKIE_DOMAIN:aifoodapp.site}")
-    private String cookieDomain;
 
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
     private final JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint;
@@ -53,7 +48,15 @@ public class SecurityConfig {
                 // Standard CORS configuration
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.setAllowedOrigins(List.of(frontEndUrl, "https://aifoodapp.site", "https://www.aifoodapp.site"));
+                    configuration.setAllowedOrigins(List.of(
+                        frontEndUrl, 
+                        "https://aifoodapp.site", 
+                        "https://www.aifoodapp.site",
+                        "http://localhost:8082",  // Frontend development port
+                        "http://localhost:3000",  // Alternative React development port
+                        "http://127.0.0.1:8082",  // Alternative localhost format
+                        "http://127.0.0.1:3000"   // Alternative localhost format
+                    ));
                     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     configuration.setAllowedHeaders(List.of("*"));
                     configuration.setAllowCredentials(true);

@@ -86,7 +86,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
                     cookie.setDomain(host);
                     log.debug("Setting cookie domain to: {}", host);
                 }
-            } catch (Exception e) {
+            } catch (java.net.URISyntaxException e) {
                 log.error("Invalid cookie domain: {}, using default", domain, e);
                 // Do not set the domain, let the browser use the default
             }
@@ -126,7 +126,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository implements Authoriza
                                 cookie.setDomain(host);
                                 log.debug("Setting cookie domain for deletion to: {}", host);
                             }
-                        } catch (Exception e) {
+                        } catch (java.net.URISyntaxException e) {
                             log.error("Invalid cookie domain for deletion: {}, using default", domain, e);
                             // Do not set the domain, let the browser use the default
                         }
