@@ -105,7 +105,7 @@ public class RecipeMapper {
     private RecipeIngredientDto toIngredientDto(RecipeIngredient recipeIngredient) {
         return new RecipeIngredientDto(
             recipeIngredient.getId(),
-            recipeIngredient.getName(),
+            recipeIngredient.getFoodItem().getName(),
             recipeIngredient.getQuantity(),
             recipeIngredient.getUnit()
         );

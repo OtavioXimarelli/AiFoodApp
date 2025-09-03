@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import javax.validation.Valid;
 
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -52,7 +53,7 @@ public class FoodItemController {
     @PostMapping("/create")
     public ResponseEntity<?> create(@Valid @RequestBody FoodItemCreateDto createDto) {
         try {
-            log.info("Received create food request: {}", createDto.getName());
+            log.info("Received create food request: {}", createDto.name());
             FoodItem foodItem = foodMapper.map(createDto);
             FoodItem savedItem = foodItemService.saveWithAiEnhancement(foodItem);
             return ResponseEntity.status(HttpStatus.CREATED).body(foodMapper.map(savedItem));
