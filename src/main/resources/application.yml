@@ -42,7 +42,7 @@ spring:
       max-age: 2592000  # 30 days in seconds
       secure: ${COOKIE_SECURE:true}  # true in production
       http-only: true
-      same-site: ${COOKIE_SAME_SITE:lax}  # 'lax' works best for OAuth2 flows, use 'strict' only if necessary
+      same-site: ${COOKIE_SAME_SITE:none}  # 'lax' works best for OAuth2 flows, use 'strict' only if necessary
       # Remove leading dot if present - Spring Security doesn't accept domains starting with dot
       domain: ${COOKIE_DOMAIN:aifoodapp.site}
       
@@ -77,7 +77,7 @@ maritaca:
   api:
     url: ${MARITACA_API_URL:https://chat.maritaca.ai/api/chat/completions}
     key: ${MARITACA_API_KEY:}
-    model: ${MARITACA_API_MODEL:sabiazinho-3}
+    model: ${MARITACA_API_MODEL:sabia-3.1}
   system:
     prompt: ${MARITACA_SYSTEM_PROMPT:"Vocé um assistente culinário"}
 
