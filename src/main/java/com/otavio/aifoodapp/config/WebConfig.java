@@ -45,7 +45,7 @@ public class WebConfig {
         config.setAllowCredentials(true);
 
         // Define as origens permitidas
-        config.setAllowedOrigins(List.of(frontEndUrl, "https://aifoodapp.site", "https://www.aifoodapp.site"));
+        config.setAllowedOrigins(List.of(frontEndUrl, "https://aifoodapp.site", "https://www.aifoodapp.site", "https://api.aifoodapp.site"));
 
         // Permite todos os cabeçalhos e métodos
         config.setAllowedHeaders(List.of("*"));
