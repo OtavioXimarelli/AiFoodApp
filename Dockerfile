@@ -1,13 +1,12 @@
 # ---- Estágio de Build com Java 23 ----
-
-# Começamos com a imagem oficial do Java 23 (JDK completo).
 FROM eclipse-temurin:23-jdk AS build
 
-# Define variáveis para a versão do Maven, para facilitar a atualização.
+# Define variáveis para a versão do Maven
 ARG MAVEN_VERSION=3.9.6
-ARG MAVEN_URL=https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz
+# CORREÇÃO: Usando um link de download mais estável do repositório de arquivos da Apache
+ARG MAVEN_URL=https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz
 
-# Instala ferramentas necessárias (curl para download) e baixa e instala o Maven.
+# Instala ferramentas necessárias e baixa e instala o Maven.
 RUN apt-get update && \
     apt-get install -y curl && \
     curl -fsSL ${MAVEN_URL} -o /tmp/maven.tar.gz && \
@@ -19,25 +18,23 @@ RUN apt-get update && \
 # Define o diretório de trabalho.
 WORKDIR /app
 
-# Copia o pom.xml e baixa as dependências (para aproveitar o cache do Docker).
+# Otimiza o cache do Docker baixando as dependências primeiro
 COPY pom.xml .
 RUN mvn dependency:go-offline
 
-# Copia o resto do código-fonte.
+# Copia o código-fonte.
 COPY src ./src
 
 # Compila e empacota a aplicação.
 RUN mvn package -DskipTests
 
 # ---- Estágio Final (Produção) com Java 23 ----
-
-# Usamos a imagem JRE (Java Runtime Environment) do Java 23, que é menor e mais segura.
 FROM eclipse-temurin:23-jre
 
 # Define o diretório de trabalho.
 WORKDIR /app
 
-# Copia APENAS o arquivo .jar gerado no estágio anterior.
+# Copia apenas o arquivo .jar gerado no estágio anterior.
 COPY --from=build /app/target/AiFoodAPP-0.0.1-SNAPSHOT.jar app.jar
 
 # Expõe a porta da aplicação.
