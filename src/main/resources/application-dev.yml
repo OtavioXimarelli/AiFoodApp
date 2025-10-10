@@ -3,9 +3,9 @@ spring:
     name: AiFoodApp
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5431/foodDB}
-    username: ${DB_USERNAME:foodappadm}
-    password: ${DB_PASSWORD:foodappadminconnectpass}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
