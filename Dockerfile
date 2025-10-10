@@ -1,5 +1,5 @@
 # ---- Estágio de Build com Java 23 ----
-FROM eclipse-temurin:23-jdk AS build
+FROM maven:3.9.8-eclipse-temurin-25-jammy AS build
 
 # Define variáveis para a versão do Maven
 ARG MAVEN_VERSION=3.9.6
@@ -28,8 +28,8 @@ COPY src ./src
 # Compila e empacota a aplicação.
 RUN mvn package -DskipTests
 
-# ---- Estágio Final (Produção) com Java 23 ----
-FROM eclipse-temurin:23-jre
+# ---- Estágio Final (Produção) com Java 25 ----
+FROM eclipse-temurin:25-jre-jammy
 
 # Define o diretório de trabalho.
 WORKDIR /app
