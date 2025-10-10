@@ -1,5 +1,5 @@
 # ---- Estágio de Build com Java 25 ----
-FROM maven:3.9.8-eclipse-temurin-25-jammy AS build
+FROM maven:3-eclipse-temurin-25-noble AS build
 
 
 # Define o diretório de trabalho.
@@ -16,7 +16,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # ---- Estágio Final (Produção) com Java 25 ----
-FROM eclipse-temurin:25-jre-jammy
+FROM eclipse-temurin:25-jre-noble
 
 # Define o diretório de trabalho.
 WORKDIR /app
