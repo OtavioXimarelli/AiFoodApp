@@ -52,7 +52,7 @@ public class FoodItem {
 
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "tb_food_tems_tags", joinColumns = @JoinColumn(name = "food_item_id"))  
+    @CollectionTable(name = "tb_food_items_tags", joinColumns = @JoinColumn(name = "food_item_id"))
     @Column(name = "tag")
     private List<String> tags;
     
