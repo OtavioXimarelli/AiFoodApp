@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS tb_recipes_instructions;
+DROP TABLE IF EXISTS tb_recipe_instructions;
 
 CREATE TABLE tb_recipe_instructions
 (
