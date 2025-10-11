@@ -13,10 +13,6 @@ RUN mvn dependency:go-offline
 COPY src ./src
 
 
-# Run Flyway repair before packaging
-# This is useful if there were any failed migrations in previous builds
-RUN mvn flyway:repair
-
 
 
 # Compila e empacota a aplicação.
