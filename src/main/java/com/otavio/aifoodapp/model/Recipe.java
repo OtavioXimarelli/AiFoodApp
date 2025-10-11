@@ -82,6 +82,22 @@ public class Recipe {
         return instructions;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public LocalDate getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(LocalDate expiration) {
+        this.expiration = expiration;
+    }
+
     public void setInstructions(List<String> instructions) {
         this.instructions = instructions;
     }

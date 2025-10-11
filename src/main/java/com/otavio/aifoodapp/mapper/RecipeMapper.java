@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,9 @@ public class RecipeMapper {
         public String prepTime;
         public List<String> instructions;
         public List<String> nutritionalInfo;
+
+        public int quantity;
+        public LocalDate expiration;
     }
 
     public List<Recipe> parseRecipeFromJson(String recipeJson) {
@@ -67,7 +71,7 @@ public class RecipeMapper {
         recipe.setInstructions(dto.instructions);
         recipe.setNutritionalInfo(dto.nutritionalInfo);
         recipe.setQuantity(1);
-        recipe.setExpiration("");
+        recipe.setExpiration(dto.expiration);
         return recipe;
     }
 
