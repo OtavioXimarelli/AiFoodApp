@@ -1,5 +1,6 @@
 package com.otavio.aifoodapp.model;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +35,7 @@ public class Recipe {
     private List<String> instructions;
 
     private int quantity;
-    private String expiration;
+    private LocalDate expiration;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "tb_recipes_nutritional_info", joinColumns = @JoinColumn(name = "recipe_id"))
